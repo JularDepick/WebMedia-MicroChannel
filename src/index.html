@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>在线资源浏览</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <!-- 左侧栏 -->
+  <aside id="sidebar" class="sidebar collapsed">
+    <div class="sidebar-buttons">
+      <button id="btnPrevTag" class="sidebar-btn" title="上一个书签">
+        <span class="btn-icon">&#9650;</span>
+        <span class="btn-label">上书签</span>
+      </button>
+      <button id="btnAddTag" class="sidebar-btn" title="新增书签">
+        <span class="btn-icon">&#10010;</span>
+        <span class="btn-label">新增</span>
+      </button>
+      <button id="btnNextTag" class="sidebar-btn" title="下一个书签">
+        <span class="btn-icon">&#9660;</span>
+        <span class="btn-label">下书签</span>
+      </button>
+      <button id="btnClearTags" class="sidebar-btn" title="清空书签">
+        <span class="btn-icon">&#10006;</span>
+        <span class="btn-label">清空</span>
+      </button>
+    </div>
+  </aside>
+
+
+  <!-- 回到顶部按钮 -->
+  <button id="btnBackTop" class="back-to-top" title="回到顶部">&#9650;</button>
+
+  <!-- 侧栏展开按钮（独立于main，避免层叠上下文限制） -->
+  <button id="sidebarExpand" class="sidebar-expand-btn" title="展开侧栏">|</button>
+
+  <!-- 主内容区 -->
+  <main id="mainContent" class="main-content">
+    <!-- Tab 导航 -->
+    <nav id="tabNav" class="tab-nav">
+      <div class="nav-left">
+        <div id="channelSwitch" class="channel-switch"></div>
+        <div class="tab-group">
+          <button class="tab-btn" data-tab="favorites">收藏</button>
+          <button class="tab-btn" data-tab="explore">探索</button>
+          <button class="tab-btn" data-tab="home">首页</button>
+          <button class="tab-btn" data-tab="recommend">推荐</button>
+          <button class="tab-btn" data-tab="hot">热门</button>
+          <button class="tab-btn" data-tab="topliked">高赞</button>
+          <button class="tab-btn" data-tab="featured">精选</button>
+          <button class="tab-btn" data-tab="best">优质</button>
+          <button class="tab-btn" data-tab="shared">乐享</button>
+          <button class="tab-btn" data-tab="sensitive">敏感</button>
+        </div>
+      </div>
+      <button id="settingsToggle" class="settings-toggle" title="设置">&#9881;</button>
+    </nav>
+
+    <!-- 公告栏 -->
+    <div id="announcementBar" class="info-bar announcement-bar"></div>
+
+    <!-- 说明栏 -->
+    <div id="descriptionBar" class="info-bar description-bar"></div>
+
+    <!-- 资源网格容器 -->
+    <div id="gridContainer" class="grid-container"></div>
+
+    <!-- 加载指示器 -->
+    <div id="loadIndicator" class="load-indicator">
+      <div class="load-spinner"></div>
+      <span>加载中...</span>
+    </div>
+
+    <!-- 没有更多 -->
+    <div id="noMore" class="no-more" style="display:none;">已经到底了</div>
+  </main>
+
+  <!-- 书签层 -->
+  <div id="tagLayer" class="tag-layer"></div>
+
+  <!-- 全屏查看模态框 -->
+  <div id="fullscreenModal" class="fullscreen-modal">
+    <button id="fullscreenClose" class="fullscreen-close" title="关闭">&times;</button>
+    <div class="fullscreen-controls">
+      <button id="zoomIn" class="fs-ctrl-btn" title="放大">+</button>
+      <button id="zoomOut" class="fs-ctrl-btn" title="缩小">&minus;</button>
+      <button id="zoomReset" class="fs-ctrl-btn" title="重置">1:1</button>
+    </div>
+    <div class="fullscreen-media-wrap">
+      <img id="fullscreenMedia" class="fullscreen-media" src="" alt="">
+    </div>
+  </div>
+
+  <!-- 设置面板 -->
+  <div id="settingsPanel" class="settings-panel">
+    <div class="settings-header">
+      <span class="settings-title">设置</span>
+      <button id="settingsClose" class="settings-close">&times;</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-section">
+        <div class="settings-label">视图列数</div>
+        <div class="col-switch" id="colSwitch">
+          <button class="col-btn" data-col="1">1</button>
+          <button class="col-btn active" data-col="2">2</button>
+          <button class="col-btn" data-col="3">3</button>
+          <button class="col-btn" data-col="4">4</button>
+          <button class="col-btn" data-col="5">5</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-label">视窗比例</div>
+        <div class="ratio-switch" id="ratioSwitch">
+          <button class="ratio-btn active" data-ratio="original">原图</button>
+          <button class="ratio-btn" data-ratio="2:1">2:1</button>
+          <button class="ratio-btn" data-ratio="16:9">16:9</button>
+          <button class="ratio-btn" data-ratio="3:2">3:2</button>
+          <button class="ratio-btn" data-ratio="4:3">4:3</button>
+          <button class="ratio-btn" data-ratio="5:4">5:4</button>
+          <button class="ratio-btn" data-ratio="1:1">1:1</button>
+          <button class="ratio-btn" data-ratio="4:5">4:5</button>
+          <button class="ratio-btn" data-ratio="3:4">3:4</button>
+          <button class="ratio-btn" data-ratio="2:3">2:3</button>
+          <button class="ratio-btn" data-ratio="9:16">9:16</button>
+          <button class="ratio-btn" data-ratio="1:2">1:2</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-label">主题</div>
+        <select id="themeSwitch" class="settings-select"></select>
+      </div>
+      <div class="settings-section">
+        <div class="settings-label">数据更新周期</div>
+        <div class="col-switch" id="cacheCycleSwitch">
+          <button class="col-btn" data-cycle="600000">10m</button>
+          <button class="col-btn" data-cycle="1800000">30m</button>
+          <button class="col-btn active" data-cycle="3600000">60m</button>
+        </div>
+        <button id="btnForceRefresh" class="ratio-btn" style="margin-top:4px;width:fit-content;">立即更新数据</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
