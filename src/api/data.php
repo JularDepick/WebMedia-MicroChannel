@@ -14,9 +14,15 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+
+// 跨域配置：false=同源策略（默认），true=允许跨域
+$ALLOW_CORS = false;
+
+if ($ALLOW_CORS) {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
+}
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 
 try {
@@ -38,29 +44,41 @@ try {
         initDB($db, $dbPath);
         $conn = getDB($db, $dbPath);
 
-        // 补全缺失的ID（初始化为0）
+        // 数据库最大行数上限
+        $MAX_ROWS = 100000;
+
         if ($min > 0 && $max >= $min) {
-            $existingStats = [];
-            $result = $conn->query('SELECT media_id FROM media_stats');
-            while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-                $existingStats[$row['media_id']] = true;
-            }
-            $stmt = $conn->prepare('INSERT OR IGNORE INTO media_stats (media_id, views, likes, favorites) VALUES (:id, 0, 0, 0)');
-            for ($i = $min; $i <= $max; $i++) {
-                if (!isset($existingStats[$i])) {
+            // 限制上限，必要时扩容
+            $maxExisting = 0;
+            $r = $conn->query('SELECT MAX(media_id) AS m FROM media_stats');
+            if ($r) { $rr = $r->fetchArray(SQLITE3_ASSOC); if ($rr && $rr['m'] > $maxExisting) $maxExisting = $rr['m']; }
+            $r = $conn->query('SELECT MAX(media_id) AS m FROM media_extra');
+            if ($r) { $rr = $r->fetchArray(SQLITE3_ASSOC); if ($rr && $rr['m'] > $maxExisting) $maxExisting = $rr['m']; }
+
+            if ($max > $MAX_ROWS) $max = $MAX_ROWS;
+            if ($min > $max) $min = $max;
+
+            $expandTo = ($max > $maxExisting) ? $max : 0;
+
+            if ($expandTo > 0) {
+                $existingStats = [];
+                $result = $conn->query('SELECT media_id FROM media_stats');
+                while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+                    $existingStats[$row['media_id']] = true;
+                }
+                $stmt = $conn->prepare('INSERT OR IGNORE INTO media_stats (media_id, views, likes, favorites) VALUES (:id, 0, 0, 0)');
+                for ($i = $maxExisting + 1; $i <= $expandTo; $i++) {
                     $stmt->bindValue(':id', $i, SQLITE3_INTEGER);
                     $stmt->execute();
                 }
-            }
 
-            $existingExtra = [];
-            $result = $conn->query('SELECT media_id FROM media_extra');
-            while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-                $existingExtra[$row['media_id']] = true;
-            }
-            $stmt2 = $conn->prepare('INSERT OR IGNORE INTO media_extra (media_id, downloads, shares, blocks) VALUES (:id, 0, 0, 0)');
-            for ($i = $min; $i <= $max; $i++) {
-                if (!isset($existingExtra[$i])) {
+                $existingExtra = [];
+                $result = $conn->query('SELECT media_id FROM media_extra');
+                while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+                    $existingExtra[$row['media_id']] = true;
+                }
+                $stmt2 = $conn->prepare('INSERT OR IGNORE INTO media_extra (media_id, downloads, shares, blocks) VALUES (:id, 0, 0, 0)');
+                for ($i = $maxExisting + 1; $i <= $expandTo; $i++) {
                     $stmt2->bindValue(':id', $i, SQLITE3_INTEGER);
                     $stmt2->execute();
                 }
@@ -68,7 +86,7 @@ try {
         }
 
         $stats = [];
-        $whereClause = ($min > 0 && $max >= $min) ? " WHERE media_id BETWEEN $min AND $max" : '';
+        $whereClause = ($min > 0 && $max >= $min) ? sprintf(' WHERE media_id BETWEEN %d AND %d', $min, $max) : '';
         $result = $conn->query('SELECT media_id AS id, views, likes, favorites FROM media_stats' . $whereClause);
         while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
             $stats[] = $row;
@@ -101,28 +119,41 @@ try {
             initDB($db, $dbPath);
             $conn = getDB($db, $dbPath);
 
+            // 数据库最大行数上限
+            $MAX_ROWS = 100000;
+
             if ($min > 0 && $max >= $min) {
-                $existingStats = [];
-                $result = $conn->query('SELECT media_id FROM media_stats');
-                while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-                    $existingStats[$row['media_id']] = true;
-                }
-                $stmt = $conn->prepare('INSERT OR IGNORE INTO media_stats (media_id, views, likes, favorites) VALUES (:id, 0, 0, 0)');
-                for ($i = $min; $i <= $max; $i++) {
-                    if (!isset($existingStats[$i])) {
+                // 限制上限，必要时扩容
+                $maxExisting = 0;
+                $r = $conn->query('SELECT MAX(media_id) AS m FROM media_stats');
+                if ($r) { $rr = $r->fetchArray(SQLITE3_ASSOC); if ($rr && $rr['m'] > $maxExisting) $maxExisting = $rr['m']; }
+                $r = $conn->query('SELECT MAX(media_id) AS m FROM media_extra');
+                if ($r) { $rr = $r->fetchArray(SQLITE3_ASSOC); if ($rr && $rr['m'] > $maxExisting) $maxExisting = $rr['m']; }
+
+                if ($max > $MAX_ROWS) $max = $MAX_ROWS;
+                if ($min > $max) $min = $max;
+
+                $expandTo = ($max > $maxExisting) ? $max : 0;
+
+                if ($expandTo > 0) {
+                    $existingStats = [];
+                    $result = $conn->query('SELECT media_id FROM media_stats');
+                    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+                        $existingStats[$row['media_id']] = true;
+                    }
+                    $stmt = $conn->prepare('INSERT OR IGNORE INTO media_stats (media_id, views, likes, favorites) VALUES (:id, 0, 0, 0)');
+                    for ($i = $maxExisting + 1; $i <= $expandTo; $i++) {
                         $stmt->bindValue(':id', $i, SQLITE3_INTEGER);
                         $stmt->execute();
                     }
-                }
 
-                $existingExtra = [];
-                $result = $conn->query('SELECT media_id FROM media_extra');
-                while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-                    $existingExtra[$row['media_id']] = true;
-                }
-                $stmt2 = $conn->prepare('INSERT OR IGNORE INTO media_extra (media_id, downloads, shares, blocks) VALUES (:id, 0, 0, 0)');
-                for ($i = $min; $i <= $max; $i++) {
-                    if (!isset($existingExtra[$i])) {
+                    $existingExtra = [];
+                    $result = $conn->query('SELECT media_id FROM media_extra');
+                    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+                        $existingExtra[$row['media_id']] = true;
+                    }
+                    $stmt2 = $conn->prepare('INSERT OR IGNORE INTO media_extra (media_id, downloads, shares, blocks) VALUES (:id, 0, 0, 0)');
+                    for ($i = $maxExisting + 1; $i <= $expandTo; $i++) {
                         $stmt2->bindValue(':id', $i, SQLITE3_INTEGER);
                         $stmt2->execute();
                     }
@@ -130,7 +161,7 @@ try {
             }
 
             $stats = [];
-            $whereClause = ($min > 0 && $max >= $min) ? " WHERE media_id BETWEEN $min AND $max" : '';
+            $whereClause = ($min > 0 && $max >= $min) ? sprintf(' WHERE media_id BETWEEN %d AND %d', $min, $max) : '';
             $result = $conn->query('SELECT media_id AS id, views, likes, favorites FROM media_stats' . $whereClause);
             while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                 $stats[] = $row;

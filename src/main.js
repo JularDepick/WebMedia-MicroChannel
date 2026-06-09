@@ -1,5 +1,5 @@
 /* ============================================================
-   在线资源浏览 - main.js
+   在线媒体微频道 - main.js
    ============================================================ */
 
 (function () {
@@ -19,62 +19,96 @@
   };
 
   /* ---------- 常量 ---------- */
-  const PAGE_TITLE = '在线资源浏览';  // 页面标题
-
-
+  const PAGE_TITLE = '在线媒体微频道';  // 页面标题
   const DEBUG = true;                // 是否输出调试消息
-
 
   // 生成8位随机hex ID
   function genId() {
     return Math.random().toString(16).slice(2, 10);
   }
 
-  // 频道配置列表（开发者可添加多个频道）
   const CHANNEL_CONFIGS = [
     {
-      id: 'a1b2c3d4',              // 唯一标识（8位hex），用于浏览器储存隔离
-      name: '默认源',               // 频道名称
-      nickname: '',                 // 频道昵称（覆盖页面标题，空则使用PAGE_TITLE）
-      announcement: '',             // 频道公告（覆盖公告内容，空则使用ANNOUNCEMENT）
-      iconSrc: '',                  // 频道图标（覆盖页面favicon，空则不修改）
-      useTheme: null,               // 频道主题索引（覆盖浏览器储存，null=不覆盖）
-      useColCount: null,            // 频道视图列数（覆盖浏览器储存，null=不覆盖）
-      useRatio: null,               // 频道视窗比例（覆盖浏览器储存，null=不覆盖）
-      backend: 'https://wencue.icu/api/WebIMG/', // 后端API地址
-      dbPath: '',                   // 数据库文件目录（相对于PHP脚本目录，空=PHP同目录）
-      dbName: 'media-cls0.db',     // SQLite数据库名
-      tableName: 'media_data',     // 数据库表名
-      resourceUrl: 'images/',      // 资源地址
-      mediaPrefix: 'beauty-',        // 文件名称前缀
-      mediaIdLength: 3,            // 文件编号位数
-      mediaIdMin: 1,               // 文件编号下限
-      mediaIdMax: 100,              // 文件编号上限
-      mediaExt: '.jpg',            // 资源文件后缀名
-      mediaType: 'img'             // 媒体类型：'img' / 'video' / 'audio'
-    },
-    {
-      id: 'b2c3d4e5',
-      name: '美女视频',
-      nickname: '',
-      announcement: '',
+      id: 'aaaaaaa0',
+      name: '美女写真',
+      nickname: 'CAIT-AI创意竞赛-WMMC团队参赛作品-在线媒体微频道',
+      announcement: '本项目为CAIT组织的 “AI织页,视呈万象” 创意竞赛参赛作品<br>\
+          开发与调试：<a href="https://github.com/JularDepick/">李文芳</a>、<a href="https://claude.com"><img src="https://img.shields.io/badge/Claude_Code-orange?style=flat&logo=claude&logoColor=white" title="Claude官网"/></a>、<a href="https://platform.xiaomimimo.com"><img src="https://img.shields.io/badge/XiaomiMiMo-grey?style=flat&logo=xiaomi&logoColor=white" title="XiaomiMiMo官网"/></a><br>\
+          图片资源审核：<a href="https://github.com/protect408/">徐健豪</a>、<a href="https://github.com/PQX-666/">彭启轩</a><br>\
+          开源地址：<a href="https://github.com/JularDepick/WebMedia-MicroChannel"><img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" title="GitHub仓库地址"/></a><br>\
+          发现高危漏洞请请报告：<a href="mailto:JudeBlack@qq.com">JudeBlack@qq.com</a><br>\
+          <b>操作教程：左上角按钮切换频道，探索页随机加载图片，推荐页及其后继页面按热门排序，长按最后一个按钮展开隐藏，左上角侧栏使用书签功能，右上角设置调整显示</b><br>\
+          <font color="red"><b>*重要声明：媒体资源均来源于互联网，经过严格的人工审核，无不良引导，请注意甄别，非盈利性质，如侵权请联系删除<b></font><br>\
+          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-home-page&left_text=visitors"/>',
       iconSrc: '',
       useTheme: null,
       useColCount: null,
       useRatio: null,
-      backend: 'https://wencue.icu/api/WebIMG/',
-      dbPath: '',
-      dbName: 'media-cls1.db',
+      backend: 'api/',
+      dbPath: 'sqlitedb/cait/',
+      dbName: 'cait20260609-0.db',
       tableName: 'media_data',
-      resourceUrl: 'videos/',
-      mediaPrefix: 'vd-',
-      mediaIdLength: 2,
+      resourceUrl: 'images/',
+      mediaPrefix: 'beauty-',
+      mediaIdLength: 4,
       mediaIdMin: 1,
-      mediaIdMax: 5,
-      mediaExt: '.mp4',
-      mediaType: 'video'
+      mediaIdMax: 157,
+      mediaExt: '.jpg',
+      mediaType: 'img'
+    },
+    {
+      id: 'aaaaaaa0',
+      name: '美女写真(托管源)',
+      nickname: 'CAIT-AI创意竞赛-WMMC团队参赛作品-在线媒体微频道',
+      announcement: '本项目为CAIT组织的 “AI织页,视呈万象” 创意竞赛参赛作品<br>\
+          开发与调试：<a href="https://github.com/JularDepick/">李文芳</a>、<a href="https://claude.com"><img src="https://img.shields.io/badge/Claude_Code-orange?style=flat&logo=claude&logoColor=white" title="Claude官网"/></a>、<a href="https://platform.xiaomimimo.com"><img src="https://img.shields.io/badge/XiaomiMiMo-grey?style=flat&logo=xiaomi&logoColor=white" title="XiaomiMiMo官网"/></a><br>\
+          图片资源审核：<a href="https://github.com/protect408/">徐健豪</a>、<a href="https://github.com/PQX-666/">彭启轩</a><br>\
+          开源地址：<a href="https://github.com/JularDepick/WebMedia-MicroChannel"><img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" title="GitHub仓库地址"/></a><br>\
+          发现高危漏洞请请报告：<a href="mailto:JudeBlack@qq.com">JudeBlack@qq.com</a><br>\
+          <b>操作教程：左上角按钮切换频道，探索页随机加载图片，推荐页及其后继页面按热门排序，长按最后一个按钮展开隐藏，左上角侧栏使用书签功能，右上角设置调整显示</b><br>\
+          <font color="red"><b>*重要声明：媒体资源均来源于互联网，经过严格的人工审核，无不良引导，请注意甄别，非盈利性质，如侵权请联系删除<b></font><br>\
+          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-home-page&left_text=visitors"/>',
+      iconSrc: '',
+      useTheme: null,
+      useColCount: null,
+      useRatio: null,
+      backend: 'api/',
+      dbPath: 'sqlitedb/cait/',
+      dbName: 'cait20260609-0.db',
+      tableName: 'media_data',
+      resourceUrl: 'https://wencue-icu-images-20260608.oss-cn-chengdu.aliyuncs.com/beauty/',
+      mediaPrefix: 'beauty-',
+      mediaIdLength: 4,
+      mediaIdMin: 1,
+      mediaIdMax: 157,
+      mediaExt: '.jpg',
+      mediaType: 'img'
     }
   ];
+  /* ---------- CHANNEL_CONFIGS配置模板与说明 ----------
+   * {
+   * id            - 唯一标识（8位hex），用于浏览器储存隔离
+   * name          - 频道名称
+   * nickname      - 频道昵称（覆盖页面标题，空则使用PAGE_TITLE）
+   * announcement  - 频道公告（支持HTML，覆盖ANNOUNCEMENT常量）
+   * iconSrc       - 频道图标（覆盖页面favicon，空则不修改）
+   * useTheme      - 频道主题索引（覆盖浏览器储存，null=不覆盖）
+   * useColCount   - 频道视图列数（覆盖浏览器储存，null=不覆盖）
+   * useRatio      - 频道视窗比例（覆盖浏览器储存，null=不覆盖）
+   * backend       - 后端API地址
+   * dbPath        - 数据库文件目录（相对于PHP脚本目录，空=PHP同目录）
+   * dbName        - SQLite数据库名
+   * tableName     - 数据库表名
+   * resourceUrl   - 资源地址
+   * mediaPrefix   - 文件名称前缀
+   * mediaIdLength - 文件编号位数
+   * mediaIdMin    - 文件编号下限
+   * mediaIdMax    - 文件编号上限
+   * mediaExt      - 资源文件后缀名
+   * mediaType     - 媒体类型：'img' / 'video' / 'audio'
+   * }
+   * 示例模板：
+   */
 
   let channelIndex = storage.get('channelIndex', 0);
   channelIndex = Math.max(0, Math.min(CHANNEL_CONFIGS.length - 1, channelIndex));
@@ -94,6 +128,7 @@
     '--bg-primary', '--bg-secondary', '--bg-tertiary', '--bg-card',
     '--text-primary', '--text-secondary', '--text-muted',
     '--accent', '--accent-hover', '--accent-dim',
+    '--link-color', '--link-underline',
     '--border', '--border-light',
     '--shadow-sm', '--shadow-md', '--shadow-lg',
     '--color-scheme'
@@ -107,6 +142,7 @@
         '#f0f0f2', '#ffffff', '#e8e8ec', '#ffffff',
         '#1a1a1e', '#666666', '#aaaaaa',
         '#ff6b35', '#e55a28', 'rgba(255,107,53,0.12)',
+        '#ff6b35', 'rgba(255,107,53,0.3)',
         '#dddde0', '#cccccc',
         '0 2px 8px rgba(0,0,0,0.08)', '0 4px 20px rgba(0,0,0,0.12)', '0 8px 40px rgba(0,0,0,0.18)',
         'light'
@@ -118,6 +154,7 @@
         '#0a0a0b', '#141416', '#1e1e22', '#1a1a1e',
         '#e8e6e3', '#9a9a9a', '#5a5a5a',
         '#ff6b35', '#ff8555', 'rgba(255,107,53,0.15)',
+        '#ff6b35', 'rgba(255,107,53,0.3)',
         '#2a2a2e', '#333338',
         '0 2px 8px rgba(0,0,0,0.3)', '0 4px 20px rgba(0,0,0,0.5)', '0 8px 40px rgba(0,0,0,0.7)',
         'dark'
@@ -129,6 +166,7 @@
         '#f4e8ea', '#fef6f7', '#e8ccd2', '#fef6f7',
         '#2a0810', '#8a2838', '#b06878',
         '#b81838', '#d02048', 'rgba(184,24,56,0.12)',
+        '#b81838', 'rgba(184,24,56,0.3)',
         '#d8b8c0', '#e0c4cc',
         '0 2px 8px rgba(0,0,0,0.08)', '0 4px 20px rgba(0,0,0,0.12)', '0 8px 40px rgba(0,0,0,0.18)',
         'light'
@@ -140,6 +178,7 @@
         '#fdf4f8', '#fef7fb', '#f8dce8', '#fef7fb',
         '#2a0818', '#b06080', '#d0a0b8',
         '#f060a0', '#ff78b0', 'rgba(240,96,160,0.12)',
+        '#f060a0', 'rgba(240,96,160,0.3)',
         '#f0c8d8', '#f4d4e0',
         '0 2px 8px rgba(0,0,0,0.06)', '0 4px 20px rgba(0,0,0,0.1)', '0 8px 40px rgba(0,0,0,0.15)',
         'light'
@@ -151,6 +190,7 @@
         '#fff8f0', '#fffbf7', '#ffe8d0', '#fffbf7',
         '#2a1808', '#b06820', '#d0a060',
         '#f07020', '#ff8838', 'rgba(240,112,32,0.12)',
+        '#f07020', 'rgba(240,112,32,0.3)',
         '#f0d8c0', '#f4e0cc',
         '0 2px 8px rgba(0,0,0,0.06)', '0 4px 20px rgba(0,0,0,0.1)', '0 8px 40px rgba(0,0,0,0.15)',
         'light'
@@ -162,6 +202,7 @@
         '#faf6ee', '#fffcf5', '#f0e8d0', '#fffcf5',
         '#2a2008', '#907020', '#b8a060',
         '#c08020', '#d89830', 'rgba(192,128,32,0.12)',
+        '#c08020', 'rgba(192,128,32,0.3)',
         '#e4d8b8', '#ece0c4',
         '0 2px 8px rgba(0,0,0,0.06)', '0 4px 20px rgba(0,0,0,0.1)', '0 8px 40px rgba(0,0,0,0.15)',
         'light'
@@ -173,6 +214,7 @@
         '#f0f8f0', '#f5fcf5', '#d8f0d8', '#f5fcf5',
         '#0a200a', '#308030', '#80b080',
         '#28a030', '#38b840', 'rgba(40,160,48,0.12)',
+        '#28a030', 'rgba(40,160,48,0.3)',
         '#b8d8b8', '#c8e0c8',
         '0 2px 8px rgba(0,0,0,0.06)', '0 4px 20px rgba(0,0,0,0.1)', '0 8px 40px rgba(0,0,0,0.15)',
         'light'
@@ -184,6 +226,7 @@
         '#eef8f8', '#f4fbfa', '#d0ece8', '#f4fbfa',
         '#082820', '#208878', '#70b0a8',
         '#189888', '#28b0a0', 'rgba(24,152,136,0.12)',
+        '#189888', 'rgba(24,152,136,0.3)',
         '#b0d8d0', '#c0e0d8',
         '0 2px 8px rgba(0,0,0,0.06)', '0 4px 20px rgba(0,0,0,0.1)', '0 8px 40px rgba(0,0,0,0.15)',
         'light'
@@ -195,6 +238,7 @@
         '#f0f6fc', '#f5f9fe', '#dce8f8', '#f5f9fe',
         '#0a1828', '#3070b0', '#88a8d0',
         '#2080e0', '#3890f0', 'rgba(32,128,224,0.12)',
+        '#2080e0', 'rgba(32,128,224,0.3)',
         '#b8d0e8', '#c8dcf0',
         '0 2px 8px rgba(0,0,0,0.06)', '0 4px 20px rgba(0,0,0,0.1)', '0 8px 40px rgba(0,0,0,0.15)',
         'light'
@@ -206,6 +250,7 @@
         '#f4f0fa', '#f9f6fd', '#e4d8f4', '#f9f6fd',
         '#18082a', '#7040a0', '#a888c8',
         '#8030c0', '#9848d8', 'rgba(128,48,192,0.12)',
+        '#8030c0', 'rgba(128,48,192,0.3)',
         '#d0b8e8', '#dcc8f0',
         '0 2px 8px rgba(0,0,0,0.06)', '0 4px 20px rgba(0,0,0,0.1)', '0 8px 40px rgba(0,0,0,0.15)',
         'light'
@@ -218,7 +263,7 @@
   function thm() { return THEMES[themeIndex]; }
 
   // 公告内容（跨tab同步）
-  const ANNOUNCEMENT = '欢迎访问在线资源浏览，海量高清资源等你探索！';
+  const ANNOUNCEMENT = '欢迎访问在线媒体微频道，海量高清资源等你探索！';
 
   // 各tab说明
   const TAB_DESCRIPTIONS = {
@@ -318,6 +363,7 @@
   let maxCols = isMobile() ? 2 : 5;
   let colCount = storage.get('colCount', defaultCols);
   colCount = Math.max(minCols, Math.min(maxCols, colCount));
+  let preferredCols = colCount;
 
   // 视窗比例
   const RATIO_MAP = {
@@ -331,8 +377,364 @@
   const ROWS_PER_PAGE = 3;
   let CARDS_PER_PAGE = ROWS_PER_PAGE * colCount;
 
-  // 全局卡片DOM缓存：资源编号 → 卡片DOM元素（绑定当前频道，刷新后丢失）
-  const cardDomCache = {};
+  /**
+   * 计算固定列数网格的每列宽度（列数不自动减少，列宽自适应）
+   * @param {number} containerWidth  容器可用宽度（px）
+   * @param {number} columns         固定列数（>=1）
+   * @param {number} minWidth        每列最小宽度（px）
+   * @param {number} maxWidth        每列最大宽度（px，>= minWidth）
+   * @param {number} gap             列间距（px）
+   * @param {number} singleMaxRatio  单列时最大宽度占容器宽度的比例（默认0.8）
+   * @returns {number} 实际应用的列宽（px）
+   */
+  function computeFixedColumnWidth(containerWidth, columns, minWidth, maxWidth, gap, singleMaxRatio) {
+    var cols = Math.max(1, Math.floor(columns));
+    var m = Math.max(0, minWidth);
+    var M = Math.max(m, maxWidth);
+    var g = Math.max(0, gap || 0);
+    var W = Math.max(0, containerWidth);
+    var ratio = (singleMaxRatio !== undefined) ? singleMaxRatio : 0.8;
+
+    var idealWidth = (W - (cols - 1) * g) / cols;
+    var colW = Math.min(M, Math.max(m, idealWidth));
+
+    if (cols === 1) {
+      var singleLimit = Math.min(M, W * ratio);
+      colW = Math.min(singleLimit, colW);
+      colW = Math.max(m, colW);
+    }
+
+    return colW;
+  }
+
+  /** 计算列宽并应用到所有列容器 */
+  let _lastColW = 0;
+  function applyColumnWidths() {
+    const w = dom.gridContainer.offsetWidth;
+    if (w <= 0) return;
+    const gap = parseFloat(getComputedStyle(dom.gridContainer).gap) || 12;
+    const colW = computeFixedColumnWidth(w, preferredCols, 0, 9999, gap, 0.8);
+    if (colW === _lastColW) return;
+    _lastColW = colW;
+    dom.gridContainer.querySelectorAll('.original-column').forEach(col => {
+      col.style.width = colW + 'px';
+    });
+    dbg('布局变化', 'applyColumnWidths', { preferredCols, colW, containerWidth: w });
+  }
+
+  /**
+   * 获取卡片高度（px）
+   * 优先读 card.dataset.h 缓存，否则读 card.offsetHeight
+   */
+  function getCardHeight(card) {
+    if (!card) return 0;
+    return parseInt(card.dataset.h) || card.offsetHeight || 0;
+  }
+
+  /**
+   * 将卡片数组分配到列容器
+   * @param {Element[]} columns  列容器元素数组
+   * @param {Array}     cards    卡片元素数组
+   * @param {string}    ratio    当前媒体比例模式
+   */
+  function distributeCards(columns, cards, ratio) {
+    // 统一按编号轮询分配（原图模式在图片加载后通过 tryRebalance 再平衡）
+    cards.forEach((card, i) => {
+      const colIdx = i % columns.length;
+      columns[colIdx].appendChild(card);
+      card.dataset.colIdx = colIdx;
+    });
+  }
+
+  /* ---------- 原图模式列再平衡 ---------- */
+
+  const pageColTracking = {
+    columns: [],       // 列容器引用
+    rebalancing: false // 防止重入
+  };
+
+  // 底部停留再平衡状态
+  let atBottom = false;       // 是否停在页面底部
+  let rafId = 0;              // requestAnimationFrame ID
+  let lastScrollY = 0;        // 上次滚动位置（判断滚动方向）
+
+  function resetColTracking(columns) {
+    pageColTracking.columns = Array.from(columns);
+    pageColTracking.rebalancing = false;
+  }
+
+  function recordPlaceholderHeight(card, colIdx) {
+    if (card instanceof MediaCard) { card.hPlaceholder = true; return; }
+    if (card.dataset.hPlaceholder) return;
+    card.dataset.hPlaceholder = '1';
+  }
+
+  /**
+   * 图片加载完成后标记真实高度就绪
+   * 如果停在底部，确保再平衡循环运行
+   */
+  function recordCardHeight(card) {
+    if (card instanceof MediaCard) {
+      if (card.hReported) return;
+      card.hReported = true;
+    } else {
+      if (card.dataset.hReported) return;
+      card.dataset.hReported = '1';
+    }
+    if (mediaRatio !== 'original') return;
+    const scrollBottom = window.innerHeight + window.scrollY;
+    const pageHeight = document.documentElement.scrollHeight;
+    const gap = pageHeight - scrollBottom;
+    if (gap < 150 && !rafId) {
+      dbg('布局变化', 'recordCardHeight触发再平衡', { gap, ratio: mediaRatio });
+      rebalanceLoop();
+    }
+  }
+
+  /**
+   * 获取列中最后一个可见区域内的卡片
+   * 可见 = 卡片底部在视口上方一小段距离之内
+   */
+  function getLastVisibleCard(col) {
+    const cards = col.querySelectorAll('.media-card');
+    if (cards.length === 0) return null;
+    const margin = 200;
+    for (let i = cards.length - 1; i >= 0; i--) {
+      const rect = cards[i].getBoundingClientRect();
+      if (rect.bottom <= window.innerHeight + margin) return cards[i];
+    }
+    return null;
+  }
+
+  /**
+   * 获取列中倒数第二张可见卡片
+   */
+  function getSecondLastVisibleCard(col, lastCard) {
+    const cards = col.querySelectorAll('.media-card');
+    const margin = 200;
+    let found = false;
+    for (let i = cards.length - 1; i >= 0; i--) {
+      if (cards[i] === lastCard) { found = true; continue; }
+      if (found) {
+        const rect = cards[i].getBoundingClientRect();
+        if (rect.bottom <= window.innerHeight + margin) return cards[i];
+      }
+    }
+    return null;
+  }
+
+  /**
+   * 再平衡：基于可见区域实际位置的两阶段贪心
+   * 使用页面文档坐标（+ scrollY）避免视口滚动导致的坐标偏移
+   * 阶段1 - 移动贪心（优先）：从最高列移末尾卡片到最低列
+   * 阶段2 - 交换贪心：末尾卡片全局重分配（列卡片数不变）
+   */
+  function tryRebalance() {
+    if (pageColTracking.rebalancing) return false;
+    const columns = pageColTracking.columns;
+    const n = columns.length;
+    if (n < 2) return false;
+
+    // 获取每列最后一个可见卡片及其文档坐标底部位置
+    const sy = window.scrollY;
+    const lastVisible = [];
+    for (let i = 0; i < n; i++) {
+      const card = getLastVisibleCard(columns[i]);
+      if (!card) return false;
+      lastVisible.push({ colIdx: i, card, bottom: card.getBoundingClientRect().bottom + sy });
+    }
+
+    let maxB = lastVisible[0].bottom, minB = lastVisible[0].bottom;
+    for (let j = 1; j < n; j++) {
+      if (lastVisible[j].bottom > maxB) maxB = lastVisible[j].bottom;
+      if (lastVisible[j].bottom < minB) minB = lastVisible[j].bottom;
+    }
+    const currentGap = maxB - minB;
+    if (currentGap < 1) return false;
+
+    // 获取 flex gap 值
+    const gap = parseFloat(getComputedStyle(columns[0]).gap) || 0;
+
+    pageColTracking.rebalancing = true;
+    let acted = false;
+
+    // ── 阶段1：移动贪心（优先） ──
+    let tallIdx = 0, shortIdx = 0;
+    for (let j = 1; j < n; j++) {
+      if (lastVisible[j].bottom > lastVisible[tallIdx].bottom) tallIdx = j;
+      if (lastVisible[j].bottom < lastVisible[shortIdx].bottom) shortIdx = j;
+    }
+
+    if (tallIdx !== shortIdx && columns[tallIdx].querySelectorAll('.media-card').length > 1) {
+      const moveCard = lastVisible[tallIdx].card;
+      const moveH = moveCard.getBoundingClientRect().height;
+      const secondLast = getSecondLastVisibleCard(columns[tallIdx], moveCard);
+      const newTallBottom = secondLast ? secondLast.getBoundingClientRect().bottom + sy : 0;
+      // 加入 gap：新卡片追加到短列末尾，flex 会在旧末尾和新卡片之间插入 gap
+      const newShortBottom = lastVisible[shortIdx].bottom + gap + moveH;
+
+      let newMax = Math.max(newTallBottom, newShortBottom);
+      for (let j = 0; j < n; j++) {
+        if (j === tallIdx || j === shortIdx) continue;
+        if (lastVisible[j].bottom > newMax) newMax = lastVisible[j].bottom;
+      }
+      let newMin = Math.min(newTallBottom, newShortBottom);
+      for (let j = 0; j < n; j++) {
+        if (j === tallIdx || j === shortIdx) continue;
+        if (lastVisible[j].bottom < newMin) newMin = lastVisible[j].bottom;
+      }
+
+      const newGap = newMax - newMin;
+      if (newGap < currentGap - 2) {
+        columns[shortIdx].appendChild(moveCard);
+        moveCard.dataset.colIdx = shortIdx;
+        dbg('布局变化', 'tryRebalance移动', { from: tallIdx, to: shortIdx, currentGap, newGap });
+        acted = true;
+      }
+    }
+
+    // ── 阶段2：交换贪心（遍历所有排列找最优配对） ──
+    // 重新获取每列末尾可见卡片（移动后 DOM 可能已更新）
+    const sy2 = window.scrollY;
+    const items = [];
+    for (let i = 0; i < n; i++) {
+      const card = getLastVisibleCard(columns[i]);
+      if (!card) { pageColTracking.rebalancing = false; return acted; }
+      items.push({ colIdx: i, card, bottom: card.getBoundingClientRect().bottom + sy2 });
+    }
+
+    let curMax = items[0].bottom, curMin = items[0].bottom;
+    for (let j = 1; j < n; j++) {
+      if (items[j].bottom > curMax) curMax = items[j].bottom;
+      if (items[j].bottom < curMin) curMin = items[j].bottom;
+    }
+    const curGap = curMax - curMin;
+    if (curGap < 1) { pageColTracking.rebalancing = false; return acted; }
+
+    // 预计算：每列的 base（倒数第二张可见卡片底部）、每张末尾卡片高度
+    const bases = [];   // bases[i] = columns[i] 的 base 底部位置
+    const cardHs = [];  // cardHs[i] = items[i].card 的高度
+    for (let i = 0; i < n; i++) {
+      const col = columns[items[i].colIdx];
+      const last = items[i].card;
+      const secondLast = getSecondLastVisibleCard(col, last);
+      bases.push(secondLast ? secondLast.getBoundingClientRect().bottom + sy2 : 0);
+      cardHs.push(last.getBoundingClientRect().height);
+    }
+
+    // 生成所有排列，找 gap 最小的配对
+    function permute(arr) {
+      if (arr.length <= 1) return [arr];
+      const result = [];
+      for (let i = 0; i < arr.length; i++) {
+        const rest = arr.slice(0, i).concat(arr.slice(i + 1));
+        for (const p of permute(rest)) {
+          result.push([arr[i], ...p]);
+        }
+      }
+      return result;
+    }
+
+    const indices = Array.from({ length: n }, (_, i) => i);
+    const perms = permute(indices);
+
+    let bestGap = curGap;
+    let bestPerm = null;
+
+    for (const perm of perms) {
+      // perm[j] = 第 j 列分配到第 perm[j] 张卡片
+      let pMax = 0, pMin = Infinity;
+      for (let j = 0; j < n; j++) {
+        const cardIdx = perm[j];
+        const newBottom = bases[j] + gap + cardHs[cardIdx];
+        if (newBottom > pMax) pMax = newBottom;
+        if (newBottom < pMin) pMin = newBottom;
+      }
+      const pGap = pMax - pMin;
+      if (pGap < bestGap) {
+        bestGap = pGap;
+        bestPerm = perm;
+      }
+    }
+
+    if (bestPerm && bestGap < curGap - 2) {
+      // 执行最优交换
+      for (let j = 0; j < n; j++) {
+        const card = items[bestPerm[j]].card;
+        const targetColIdx = items[j].colIdx;
+        const fromColIdx = parseInt(card.dataset.colIdx);
+        if (fromColIdx === targetColIdx) continue;
+        columns[targetColIdx].appendChild(card);
+        card.dataset.colIdx = targetColIdx;
+      }
+      dbg('布局变化', 'tryRebalance交换', { curGap, bestGap });
+      acted = true;
+    }
+
+    if (acted) {
+      dbg('布局变化', 'tryRebalance完成');
+    }
+    pageColTracking.rebalancing = false;
+    return acted;
+  }
+
+  /**
+   * 底部停留时持续再平衡循环
+   * 停在底部时由 rAF 驱动，每次尝试一轮移动
+   * 向上滚动离开底部时自动停止
+   */
+  function rebalanceLoop() {
+    if (!atBottom || mediaRatio !== 'original') {
+      dbg('布局变化', 'rebalanceLoop跳过', { atBottom, ratio: mediaRatio });
+      rafId = 0; return;
+    }
+    // 自检：内容扩展导致用户被推离底部时停止
+    const scrollBottom = window.innerHeight + window.scrollY;
+    const pageHeight = document.documentElement.scrollHeight;
+    if (pageHeight - scrollBottom >= 300) {
+      dbg('布局变化', 'rebalanceLoop被推离底部，停止', { scrollBottom, pageHeight, gap: pageHeight - scrollBottom });
+      atBottom = false; rafId = 0; return;
+    }
+    const progress = tryRebalance();
+    if (progress) {
+      rafId = requestAnimationFrame(rebalanceLoop);
+    } else {
+      // 无进展，停止循环；等待新事件（图片加载/滚动）重启
+      rafId = 0;
+    }
+  }
+
+  // 滚动检测：到达底部启动循环，向上滚动离开底部停止循环
+  lastScrollY = window.scrollY;
+  window.addEventListener('scroll', () => {
+    if (mediaRatio !== 'original') {
+      if (atBottom) { atBottom = false; rafId = 0; }
+      lastScrollY = window.scrollY;
+      return;
+    }
+    const curY = window.scrollY;
+    const threshold = 150;
+    const scrollBottom = window.innerHeight + curY;
+    const pageHeight = document.documentElement.scrollHeight;
+    const isAtBottom = pageHeight - scrollBottom < threshold;
+
+    if (isAtBottom) {
+      // 到达底部：启动循环
+      if (!atBottom) {
+        atBottom = true;
+        dbg('布局变化', '到达底部 → 启动再平衡循环', { ratio: mediaRatio, threshold });
+      }
+      if (!rafId) rebalanceLoop();
+    } else if (curY < lastScrollY && atBottom) {
+      // 向上滚动离开底部：停止循环
+      atBottom = false;
+      dbg('布局变化', '向上滚动离开底部 → 停止再平衡循环', { ratio: mediaRatio });
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+    }
+    lastScrollY = curY;
+  }, { passive: true });
+
+
   // 各tab已加载的资源ID顺序（按加载顺序，用于列重建）
   const tabCardOrder = {};
 
@@ -709,14 +1111,12 @@
     try {
       if (!canRequestAPI()) {
         dbgW('后端通信', 'file://协议+本地后端，跳过', { backend: cfg().backend });
-        storage.set(cfgKey('lastFetchTime'), Date.now());
         return false;
       }
       dbg('后端通信', 'POST(获取数据) → ' + cfg().backend + 'data.php', { dbPath: cfg().dbPath || '', db: cfg().dbName, min: cfg().mediaIdMin, max: cfg().mediaIdMax });
       const res = await apiGetData();
       if (!res || !res.stats || !Array.isArray(res.stats) || res.stats.length === 0) {
         dbgW('后端通信', 'GET ✗ 响应无效', { response: res });
-        storage.set(cfgKey('lastFetchTime'), Date.now());
         return false;
       }
 
@@ -773,19 +1173,23 @@
       return true;
     } catch (e) {
       dbgE('后端通信', 'GET ✗ 异常', { error: e.message, stack: e.stack });
-      storage.set(cfgKey('lastFetchTime'), Date.now());
       return false;
     }
   }
 
-  // 页面加载后：仅在无本地数据时自动拉取（有本地数据则跳过，保护用户操作）
+  // 页面加载后：无本地数据或缓存过期时自动拉取
   async function checkAndRefreshData() {
-    const hasLocal = getLastFetchTime() > 0;
-    if (hasLocal) {
-      dbg('后端通信', '跳过自动拉取', { lastFetchTime: getLastFetchTime(), 距上次: Math.round((Date.now() - getLastFetchTime()) / 1000) + 's' });
+    const lastFetch = getLastFetchTime();
+    const cycle = getCacheCycle();
+    const elapsed = Date.now() - lastFetch;
+    const hasLocal = lastFetch > 0;
+    const expired = !hasLocal || elapsed >= cycle;
+
+    if (!expired) {
+      dbg('后端通信', '缓存未过期，跳过拉取', { lastFetchTime: lastFetch, 距上次: Math.round(elapsed / 1000) + 's', 周期: Math.round(cycle / 1000) + 's' });
       return;
     }
-    dbg('后端通信', '无本地数据，自动拉取', { lastFetchTime: 0 });
+    dbg('后端通信', hasLocal ? '缓存已过期，自动拉取' : '无本地数据，自动拉取', { lastFetchTime: lastFetch, 距上次: Math.round(elapsed / 1000) + 's', 周期: Math.round(cycle / 1000) + 's' });
     const success = await fetchAllDataFromServer();
     if (success) {
       dbg('后端通信', '自动拉取成功', { tab: currentTab });
@@ -860,161 +1264,6 @@
      资源卡片创建
      ============================================================ */
 
-  function createMediaCard(id) {
-    const card = document.createElement('div');
-    card.className = 'media-card';
-    card.dataset.id = id;
-
-    const mediaWrap = document.createElement('div');
-    mediaWrap.className = 'card-media-wrap';
-
-    let mediaEl;
-    if (cfg().mediaType === 'video' || cfg().mediaType === 'audio') {
-      mediaEl = document.createElement(cfg().mediaType === 'video' ? 'video' : 'audio');
-      mediaEl.className = 'card-media loaded';
-      mediaEl.controls = true;
-      mediaEl.preload = 'metadata';
-      mediaEl.playsInline = true;
-      mediaEl.src = mediaPath(id);
-      mediaEl.addEventListener('error', () => {
-        card.classList.add('card-disabled');
-        card.querySelectorAll('.control-bar .ctrl-btn').forEach(btn => {
-          btn.classList.add('disabled-btn');
-        });
-        dbg('卡片缓存', '媒体加载失败，禁用卡片功能', { id });
-      });
-    } else {
-      mediaEl = document.createElement('img');
-      mediaEl.className = 'card-media loading';
-      mediaEl.alt = '';
-      mediaEl.loading = 'lazy';
-      mediaEl.dataset.src = mediaPath(id);
-
-      mediaEl.addEventListener('load', () => {
-        mediaEl.classList.remove('loading');
-        mediaEl.classList.add('loaded');
-        mediaWrap.classList.add('media-loaded');
-      });
-
-      mediaEl.addEventListener('error', () => {
-        mediaEl.classList.remove('loading');
-        mediaEl.classList.add('loaded');
-        card.classList.add('card-disabled');
-        card.querySelectorAll('.control-bar .ctrl-btn').forEach(btn => {
-          btn.classList.add('disabled-btn');
-        });
-        dbg('卡片缓存', '媒体加载失败，禁用卡片功能', { id });
-      });
-
-      // 使用 IntersectionObserver 懒加载
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && !scrollPauseLoad) {
-            mediaEl.src = mediaEl.dataset.src;
-            observer.unobserve(mediaEl);
-            observer.disconnect();
-          }
-        });
-      }, { rootMargin: '200px' });
-      observer.observe(mediaEl);
-    }
-
-    mediaWrap.appendChild(mediaEl);
-
-    // 控件栏
-    const controlBar = document.createElement('div');
-    controlBar.className = 'control-bar';
-
-    // 从缓存获取计数
-    const viewCount = getCountFromCache('hot', id);
-    const likeCount = getCountFromCache('topliked', id);
-    const favCount = getCountFromCache('featured', id);
-    const dlCount = getCountFromCache('downloads', id);
-    const shareCount = getCountFromCache('shares', id);
-    const blockCount = getCountFromCache('blocks', id);
-
-    // 浏览量（不可交互，仅显示）
-    const btnView = createCtrlBtn('&#128065;', '浏览量', null, viewCount);
-    btnView.classList.add('ctrl-btn-static');
-
-    // 点赞
-    const btnLike = createCtrlBtn('&#9829;', '点赞', () => {
-      handleLike(id, btnLike);
-    }, likeCount);
-    btnLike.dataset.action = 'like';
-    if (isLiked(id)) btnLike.classList.add('active-like');
-
-    // 收藏
-    const btnFav = createCtrlBtn('&#9733;', '收藏', () => {
-      handleFavorite(id, btnFav);
-    }, favCount);
-    btnFav.dataset.action = 'favorite';
-    if (isFavorited(id)) btnFav.classList.add('active-fav');
-
-    // 全屏
-    const btnFullscreen = createCtrlBtn('&#9974;', '全屏', () => openFullscreen(id));
-
-    // 下载
-    const btnDownload = createCtrlBtn('&#8615;', '下载', () => handleDownload(id), dlCount);
-    btnDownload.dataset.action = 'download';
-
-    // 分享
-    const btnShare = createCtrlBtn('&#128279;', '分享', () => handleShare(id), shareCount);
-    btnShare.dataset.action = 'share';
-
-    // 屏蔽/取消屏蔽（均需二次确认）
-    function resetBlockBtn() {
-      clearTimeout(btnBlock._confirmTimer);
-      btnBlock._confirmTimer = null;
-      btnBlock.classList.remove('confirm-state');
-      if (currentTab === 'sensitive' && isBlocked(id)) {
-        btnBlock.title = '取消屏蔽';
-        btnBlock.querySelector('.ctrl-icon').innerHTML = '&#8617;';
-      } else {
-        btnBlock.title = '屏蔽';
-        btnBlock.querySelector('.ctrl-icon').innerHTML = '&#128683;';
-      }
-    }
-    const btnBlock = createCtrlBtn('&#128683;', '屏蔽', () => {
-      if (btnBlock.classList.contains('confirm-state')) {
-        resetBlockBtn();
-        if (currentTab === 'sensitive' && isBlocked(id)) {
-          unblockMedia(id);
-          card.classList.remove('card-blocked');
-          showToast('已取消屏蔽');
-        } else {
-          handleBlock(id, card, btnBlock);
-        }
-      } else {
-        btnBlock.classList.add('confirm-state');
-        btnBlock.title = currentTab === 'sensitive' && isBlocked(id) ? '确认取消屏蔽？' : '确认屏蔽？';
-        btnBlock._confirmTimer = setTimeout(resetBlockBtn, 3000);
-      }
-    }, blockCount);
-    btnBlock._resetConfirm = resetBlockBtn;
-    btnBlock.dataset.action = 'block';
-
-    // 敏感页已屏蔽卡片：标红边框 + 撤销图标 + 按钮文案改为"取消屏蔽"
-    if (currentTab === 'sensitive' && isBlocked(id)) {
-      card.classList.add('card-blocked');
-      btnBlock.title = '取消屏蔽';
-      btnBlock.querySelector('.ctrl-icon').innerHTML = '&#8617;';
-    }
-
-    controlBar.append(btnView, btnLike, btnFav, btnFullscreen, btnDownload, btnShare, btnBlock);
-
-    card.append(mediaWrap, controlBar);
-
-    // 双击视窗区域打开全屏
-    mediaWrap.addEventListener('dblclick', (e) => {
-      e.preventDefault();
-      openFullscreen(id);
-    });
-
-    cardDomCache[id] = card;
-    return card;
-  }
-
   function createCtrlBtn(iconHtml, tooltip, onClick, count) {
     const btn = document.createElement('button');
     btn.className = 'ctrl-btn';
@@ -1036,67 +1285,337 @@
     return btn;
   }
 
+  /* ============================================================
+     MediaCard 类
+     ============================================================ */
+
+  const cardInstances = new Map();
+
+  // 向后兼容：cardDomCache 保留为 Proxy
+  const cardDomCache = new Proxy(cardInstances, {
+    get(map, id) { const c = map.get(Number(id)); return c ? c.el : undefined; },
+    has(map, id) { return map.has(Number(id)); },
+    set(map, id, val) { return false; },
+    ownKeys(map) { return [...map.keys()].map(String); },
+    getOwnPropertyDescriptor(map, id) {
+      const c = map.get(Number(id));
+      return c ? { value: c.el, writable: false, enumerable: true, configurable: true } : undefined;
+    }
+  });
+
+  class MediaCard {
+    #id; #el; #mediaWrap; #mediaEl; #observer;
+    #btns = {};
+    #cachedH = 0; #hReported = false; #hPlaceholder = false;
+
+    constructor(id) {
+      this.#id = id;
+      const mediaType = cfg().mediaType;
+      const card = document.createElement('div');
+      card.className = 'media-card';
+      card.dataset.id = id;
+      this.#el = card;
+
+      // ── 媒体区域 ──
+      const mediaWrap = document.createElement('div');
+      mediaWrap.className = 'card-media-wrap';
+      mediaWrap.title = mediaPath(id).split('/').pop();
+      this.#mediaWrap = mediaWrap;
+
+      if (mediaType === 'video' || mediaType === 'audio') {
+        this.#setupVideoAudio(mediaType, id);
+      } else {
+        this.#setupImage(id);
+      }
+
+      mediaWrap.appendChild(this.#mediaEl);
+
+      // ── 控件栏 ──
+      const controlBar = document.createElement('div');
+      controlBar.className = 'control-bar';
+      this.#buildButtons(id, controlBar);
+
+      card.append(mediaWrap, controlBar);
+
+      // 双击全屏
+      mediaWrap.addEventListener('dblclick', (e) => {
+        e.preventDefault();
+        openFullscreen(id);
+      });
+
+      // 注册缓存
+      cardInstances.set(id, this);
+    }
+
+    // ── 只读属性 ──
+    get id() { return this.#id; }
+    get el() { return this.#el; }
+    get height() { return this.#cachedH || this.#el.offsetHeight || 0; }
+    get colIdx() { return parseInt(this.#el.dataset.colIdx); }
+    set colIdx(v) { this.#el.dataset.colIdx = v; }
+    get isHeightReady() { return !!this.#cachedH; }
+
+    // ── 按钮引用 ──
+    get btns() { return this.#btns; }
+
+    // ── 高度缓存 ──
+    cacheHeight() {
+      this.#cachedH = this.#el.offsetHeight;
+      this.#el.dataset.h = this.#cachedH;
+    }
+    resetHeightFlags() {
+      this.#hReported = false;
+      this.#hPlaceholder = false;
+      this.#el.dataset.hReported = '';
+      this.#el.dataset.hPlaceholder = '';
+    }
+    get hReported() { return this.#hReported; }
+    set hReported(v) { this.#hReported = v; this.#el.dataset.hReported = v ? '1' : ''; }
+    get hPlaceholder() { return this.#hPlaceholder; }
+    set hPlaceholder(v) { this.#hPlaceholder = v; this.#el.dataset.hPlaceholder = v ? '1' : ''; }
+
+    // ── 媒体加载 ──
+    #setupImage(id) {
+      const img = document.createElement('img');
+      img.className = 'card-media loading';
+      img.alt = '';
+      img.loading = 'lazy';
+      img.dataset.src = mediaPath(id);
+      this.#mediaEl = img;
+
+      img.addEventListener('load', () => {
+        img.classList.remove('loading');
+        img.classList.add('loaded');
+        this.#mediaWrap.classList.add('media-loaded');
+        this.cacheHeight();
+        recordCardHeight(this);
+      });
+      img.addEventListener('error', () => {
+        img.classList.remove('loading');
+        img.classList.add('loaded');
+        this.cacheHeight();
+        recordCardHeight(this);
+        this.disable();
+        dbg('卡片缓存', '媒体加载失败，禁用卡片功能', { id });
+      });
+
+      // IntersectionObserver 懒加载
+      this.#observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && !scrollPauseLoad) {
+            img.removeAttribute('loading');
+            img.src = img.dataset.src;
+            this.#observer.unobserve(img);
+            this.#observer.disconnect();
+            this.#observer = null;
+            break;
+          }
+        }
+      }, { rootMargin: '200px' });
+      this.#observer.observe(img);
+    }
+
+    #setupVideoAudio(type, id) {
+      const el = document.createElement(type);
+      el.className = 'card-media loaded';
+      el.controls = true;
+      el.preload = 'metadata';
+      el.playsInline = true;
+      el.src = mediaPath(id);
+      this.#mediaEl = el;
+
+      el.addEventListener('loadedmetadata', () => {
+        this.#mediaWrap.classList.add('media-loaded');
+        this.cacheHeight();
+        recordCardHeight(this);
+      });
+      el.addEventListener('error', () => {
+        this.#mediaWrap.classList.add('media-loaded');
+        this.cacheHeight();
+        recordCardHeight(this);
+        this.disable();
+        dbg('卡片缓存', '媒体加载失败，禁用卡片功能', { id });
+      });
+    }
+
+    ensureLoaded() {
+      const img = this.#mediaEl;
+      if (img.tagName === 'IMG' && !img.src && img.dataset.src) {
+        img.removeAttribute('loading');
+        img.src = img.dataset.src;
+      }
+    }
+
+    // ── 按钮构建 ──
+    #buildButtons(id, controlBar) {
+      const b = this.#btns;
+
+      b.view = createCtrlBtn('&#128065;', '浏览量', null, getCountFromCache('hot', id));
+      b.view.classList.add('ctrl-btn-static');
+
+      b.like = createCtrlBtn('&#9829;', '点赞', () => handleLike(id, this), getCountFromCache('topliked', id));
+      b.like.dataset.action = 'like';
+      if (isLiked(id)) b.like.classList.add('active-like');
+
+      b.favorite = createCtrlBtn('&#9733;', '收藏', () => handleFavorite(id, this), getCountFromCache('featured', id));
+      b.favorite.dataset.action = 'favorite';
+      if (isFavorited(id)) b.favorite.classList.add('active-fav');
+
+      b.fullscreen = createCtrlBtn('&#9974;', '全屏', () => openFullscreen(id));
+
+      b.download = createCtrlBtn('&#8615;', '下载', () => handleDownload(id), getCountFromCache('downloads', id));
+      b.download.dataset.action = 'download';
+
+      b.share = createCtrlBtn('&#128279;', '分享', () => handleShare(id), getCountFromCache('shares', id));
+      b.share.dataset.action = 'share';
+
+      // 屏蔽按钮（二次确认）
+      const resetBlockBtn = () => {
+        clearTimeout(b.block._confirmTimer);
+        b.block._confirmTimer = null;
+        b.block.classList.remove('confirm-state');
+        if (currentTab === 'sensitive' && isBlocked(id)) {
+          b.block.title = '取消屏蔽';
+          b.block.querySelector('.ctrl-icon').innerHTML = '&#8617;';
+        } else {
+          b.block.title = '屏蔽';
+          b.block.querySelector('.ctrl-icon').innerHTML = '&#128683;';
+        }
+      };
+      b.block = createCtrlBtn('&#128683;', '屏蔽', () => {
+        if (b.block.classList.contains('confirm-state')) {
+          resetBlockBtn();
+          if (currentTab === 'sensitive' && isBlocked(id)) {
+            unblockMedia(id);
+            this.hideBlocked();
+            showToast('已取消屏蔽');
+          } else {
+            handleBlock(id, this);
+          }
+        } else {
+          b.block.classList.add('confirm-state');
+          b.block.title = currentTab === 'sensitive' && isBlocked(id) ? '确认取消屏蔽？' : '确认屏蔽？';
+          b.block._confirmTimer = setTimeout(resetBlockBtn, 3000);
+        }
+      }, getCountFromCache('blocks', id));
+      b.block._resetConfirm = resetBlockBtn;
+      b.block.dataset.action = 'block';
+
+      // 敏感页已屏蔽初始化
+      if (currentTab === 'sensitive' && isBlocked(id)) {
+        this.#el.classList.add('card-blocked');
+        b.block.title = '取消屏蔽';
+        b.block.querySelector('.ctrl-icon').innerHTML = '&#8617;';
+      }
+
+      controlBar.append(b.view, b.like, b.favorite, b.fullscreen, b.download, b.share, b.block);
+    }
+
+    // ── 状态同步（缓存命中时调用） ──
+    syncState(tab) {
+      this.ensureLoaded();
+      const b = this.#btns;
+      b.like.classList.toggle('active-like', isLiked(this.#id));
+      b.like.title = isLiked(this.#id) ? '已赞' : '点赞';
+      b.favorite.classList.toggle('active-fav', isFavorited(this.#id));
+      b.favorite.title = isFavorited(this.#id) ? '收藏' : '取消收藏';
+      if (tab === 'sensitive' && isBlocked(this.#id)) {
+        this.#el.classList.add('card-blocked');
+        b.block.title = '取消屏蔽';
+        b.block.querySelector('.ctrl-icon').innerHTML = '&#8617;';
+      } else {
+        this.#el.classList.remove('card-blocked');
+        b.block.title = '屏蔽';
+        b.block.querySelector('.ctrl-icon').innerHTML = '&#128683;';
+      }
+      this.syncCounts();
+    }
+
+    // ── 计数同步 ──
+    syncCounts() {
+      const actions = { view: 'hot', like: 'topliked', favorite: 'featured', download: 'downloads', share: 'shares' };
+      for (const [action, slot] of Object.entries(actions)) {
+        const item = DATA_SLOTS[slot].get().find(d => d.id === this.#id);
+        const count = item ? item.count : 0;
+        const btn = action === 'view' ? this.#btns.view : this.#btns[action];
+        if (btn && btn._countEl) btn._countEl.textContent = formatCount(count);
+      }
+    }
+
+    updateCount(action, count) {
+      const btn = action === 'view' ? this.#btns.view : this.#btns[action];
+      if (btn && btn._countEl) btn._countEl.textContent = formatCount(count);
+    }
+
+    // ── 视觉操作 ──
+    disable() {
+      this.#el.classList.add('card-disabled');
+      this.#el.querySelectorAll('.control-bar .ctrl-btn').forEach(btn => btn.classList.add('disabled-btn'));
+    }
+
+    showBlocked() {
+      this.#el.classList.add('card-blocked');
+      this.#btns.block.title = '取消屏蔽';
+      this.#btns.block.querySelector('.ctrl-icon').innerHTML = '&#8617;';
+    }
+
+    hideBlocked() {
+      this.#el.classList.remove('card-blocked');
+      this.#btns.block.title = '屏蔽';
+      this.#btns.block.querySelector('.ctrl-icon').innerHTML = '&#128683;';
+    }
+
+    animateRemove() {
+      const el = this.#el;
+      el.style.transition = 'opacity 0.3s, transform 0.3s';
+      el.style.opacity = '0';
+      el.style.transform = 'scale(0.9)';
+      setTimeout(() => { el.style.display = 'none'; el.style.opacity = ''; el.style.transform = ''; }, 300);
+    }
+
+    resetDisplay() {
+      this.#el.style.display = '';
+    }
+
+    // ── 销毁 ──
+    destroy() {
+      if (this.#observer) { this.#observer.disconnect(); this.#observer = null; }
+      this.#el.remove();
+      cardInstances.delete(this.#id);
+    }
+  }
+
+  // 向后兼容：替代旧 createMediaCard
+  function createMediaCard(id) {
+    return new MediaCard(id).el;
+  }
+
   // 从全局缓存获取卡片，不存在则构建并缓存
   function getOrCreateCard(id) {
-    let card = cardDomCache[id];
-    if (card) {
-      // 复用缓存卡片时，同步点赞/收藏/屏蔽的视觉状态
-      const btnLike = card.querySelector('[data-action="like"]');
-      const btnFav = card.querySelector('[data-action="favorite"]');
-      const btnBlock = card.querySelector('[data-action="block"]');
-      if (btnLike) {
-        btnLike.classList.toggle('active-like', isLiked(id));
-        btnLike.title = isLiked(id) ? '已赞' : '点赞';
-      }
-      if (btnFav) {
-        btnFav.classList.toggle('active-fav', isFavorited(id));
-        btnFav.title = isFavorited(id) ? '收藏' : '取消收藏';
-      }
-      if (btnBlock) {
-        if (currentTab === 'sensitive' && isBlocked(id)) {
-          card.classList.add('card-blocked');
-          btnBlock.title = '取消屏蔽';
-          btnBlock.querySelector('.ctrl-icon').innerHTML = '&#8617;';
-        } else {
-          card.classList.remove('card-blocked');
-          btnBlock.title = '屏蔽';
-          btnBlock.querySelector('.ctrl-icon').innerHTML = '&#128683;';
-        }
-      }
-      // 同步各量计数显示
-      syncCardCounts(id, card);
-      return card;
+    let instance = cardInstances.get(id);
+    if (instance) {
+      instance.syncState(currentTab);
+      return instance.el;
     }
     return createMediaCard(id);
   }
 
   // 同步缓存卡片的各量计数显示（从DATA_SLOTS读取最新值）
   function syncCardCounts(id, card) {
-    const actions = {
-      view: 'hot', like: 'topliked', favorite: 'featured',
-      download: 'downloads', share: 'shares'
-    };
-    for (const [action, slot] of Object.entries(actions)) {
-      const item = DATA_SLOTS[slot].get().find(d => d.id === id);
-      const count = item ? item.count : 0;
-      const selector = action === 'view' ? '.ctrl-btn-static' : `[data-action="${action}"]`;
-      const btn = card.querySelector(selector);
-      if (btn && btn._countEl) btn._countEl.textContent = formatCount(count);
-    }
+    const instance = cardInstances.get(id);
+    if (instance) { instance.syncCounts(); return; }
   }
 
-  // 更新卡片DOM中的计数显示（通过cardDomCache查找）
+  // 更新卡片DOM中的计数显示（通过cardInstances查找）
   function updateCardCountDisplay(id, action, count) {
-    const card = cardDomCache[id];
-    if (!card) return;
-    const selector = action === 'view' ? '.ctrl-btn-static' : `[data-action="${action}"]`;
-    const btn = card.querySelector(selector);
-    if (btn && btn._countEl) btn._countEl.textContent = formatCount(count);
+    const instance = cardInstances.get(id);
+    if (instance) instance.updateCount(action, count);
   }
 
   /* ---------- 控件栏操作 ---------- */
 
-  function handleLike(id, btn) {
+  function handleLike(id, instance) {
+    const btn = instance.btns.like;
     const nowLiked = toggleLike(id);
     if (nowLiked) {
       dbg('用户操作', '点赞 id=' + id, { id, B列表已通知: isLikeNotified(id), 通知后端: !isLikeNotified(id) });
@@ -1115,7 +1634,8 @@
     updateCardCountDisplay(id, 'like', newCount);
   }
 
-  function handleFavorite(id, btn) {
+  function handleFavorite(id, instance) {
+    const btn = instance.btns.favorite;
     const nowFav = toggleFavorite(id);
     if (nowFav) {
       dbg('用户操作', '收藏 id=' + id, { id, B列表已通知: isFavNotified(id), 通知后端: !isFavNotified(id) });
@@ -1131,15 +1651,8 @@
       btn.classList.remove('active-fav');
       btn.title = '取消收藏';
       showToast('已取消收藏');
-      // 收藏tab：立即移除卡片（缓存保留）
       if (currentTab === 'favorites') {
-        const card = cardDomCache[id];
-        if (card) {
-          card.style.transition = 'opacity 0.3s, transform 0.3s';
-          card.style.opacity = '0';
-          card.style.transform = 'scale(0.9)';
-          setTimeout(() => { card.style.display = 'none'; card.style.opacity = ''; card.style.transform = ''; }, 300);
-        }
+        instance.animateRemove();
         const order = tabCardOrder[currentTab];
         if (order) {
           const idx = order.indexOf(id);
@@ -1239,7 +1752,7 @@
     return item ? item.count : Math.max(0, delta);
   }
 
-  function handleBlock(id, card, btnBlock) {
+  function handleBlock(id, instance) {
     dbg('用户操作', '屏蔽 id=' + id, { id, tab: currentTab, B列表已通知: isBlockNotified(id), 通知后端: !isBlockNotified(id) });
     blockMedia(id);
     let newCount = 0;
@@ -1258,30 +1771,23 @@
       setLikes(_likes);
       incrementCacheCount('topliked', id, -1);
       updateCardCountDisplay(id, 'like', getCountFromCache('topliked', id));
-      const btnLike = card.querySelector('[data-action="like"]');
-      if (btnLike) { btnLike.classList.remove('active-like'); btnLike.title = '点赞'; }
+      const btnLike = instance.btns.like;
+      btnLike.classList.remove('active-like');
+      btnLike.title = '点赞';
     }
     if (isFavorited(id)) {
       _favorites = _favorites.filter(x => x !== id);
       setFavorites(_favorites);
       incrementCacheCount('featured', id, -1);
       updateCardCountDisplay(id, 'favorite', getCountFromCache('featured', id));
-      const btnFav = card.querySelector('[data-action="favorite"]');
-      if (btnFav) { btnFav.classList.remove('active-fav'); btnFav.title = '收藏'; }
+      const btnFav = instance.btns.favorite;
+      btnFav.classList.remove('active-fav');
+      btnFav.title = '收藏';
     }
     if (currentTab === 'sensitive') {
-      // 敏感tab：标红边框+变暗，按钮变为取消屏蔽
-      card.classList.add('card-blocked');
-      if (btnBlock) {
-        btnBlock.title = '取消屏蔽';
-        btnBlock.querySelector('.ctrl-icon').innerHTML = '&#8617;';
-      }
+      instance.showBlocked();
     } else {
-      // 非敏感tab：动画移除卡片（缓存保留）
-      card.style.transition = 'opacity 0.3s, transform 0.3s';
-      card.style.opacity = '0';
-      card.style.transform = 'scale(0.9)';
-      setTimeout(() => { card.style.display = 'none'; card.style.opacity = ''; card.style.transform = ''; }, 300);
+      instance.animateRemove();
       const order = tabCardOrder[currentTab];
       if (order) {
         const idx = order.indexOf(id);
@@ -1374,26 +1880,43 @@
     if (!sortedIds) { isLoadingPage = false; return; }
     const start = currentPage * CARDS_PER_PAGE;
     if (start >= sortedIds.length) {
-      dom.noMore.style.display = 'block';
       isLoadingPage = false;
       return;
     }
 
     const pageIds = sortedIds.slice(start, start + CARDS_PER_PAGE);
     const columns = dom.gridContainer.querySelectorAll('.original-column');
+    const newCards = [];
 
-    pageIds.forEach((id, i) => {
+    pageIds.forEach((id) => {
       const card = getOrCreateCard(id);
       if (!tabCardOrder[currentTab]) tabCardOrder[currentTab] = [];
       tabCardOrder[currentTab].push(id);
-      if (columns[i % colCount]) columns[i % colCount].appendChild(card);
+      newCards.push(card);
     });
 
-    currentPage++;
-    dom.loadIndicator.style.display = 'none';
-    dom.noMore.style.display = pageIds.length < CARDS_PER_PAGE ? 'block' : 'none';
-    isLoadingPage = false;
-    dbg('页面加载', 'loadNextPage', { page: currentPage, 本页数: pageIds.length, tab: currentTab, ratio: mediaRatio });
+    // 统一按编号轮询分配
+    distributeCards(columns, newCards, mediaRatio);
+
+    // 原图模式：缓存卡片报告真实高度，新卡片报告占位高度
+    if (mediaRatio === 'original') {
+      newCards.forEach(card => {
+        if (card.dataset.h) {
+          recordCardHeight(card);
+        } else {
+          recordPlaceholderHeight(card);
+        }
+      });
+    }
+
+    finishPage();
+
+    function finishPage() {
+      currentPage++;
+      dom.loadIndicator.style.display = 'none';
+      isLoadingPage = false;
+      dbg('页面加载', 'loadNextPage', { page: currentPage, 本页数: pageIds.length, tab: currentTab, ratio: mediaRatio });
+    }
   }
 
   /* ---------- 重建列容器（不重载内容） ---------- */
@@ -1401,21 +1924,42 @@
     dbg('布局变化', 'rebuildOriginalColumns', { colCount, ratio: mediaRatio, tab: currentTab });
     dom.gridContainer.innerHTML = '';
 
+    colCount = preferredCols;
+    CARDS_PER_PAGE = ROWS_PER_PAGE * colCount;
+    const gap = parseFloat(getComputedStyle(dom.gridContainer).gap) || 12;
+    const colW = computeFixedColumnWidth(dom.gridContainer.offsetWidth, colCount, 0, 9999, gap, 0.8);
+    _lastColW = colW;
+
     // 创建列容器并分配卡片
     for (let i = 0; i < colCount; i++) {
       const col = document.createElement('div');
       col.className = 'original-column';
+      col.style.width = colW + 'px';
       dom.gridContainer.appendChild(col);
     }
     const columns = dom.gridContainer.querySelectorAll('.original-column');
     const order = tabCardOrder[currentTab] || [];
-    order.forEach((id, idx) => {
-      const card = cardDomCache[id];
-      if (card) columns[idx % colCount].appendChild(card);
-    });
+    const cards = order.map(id => cardDomCache[id]).filter(Boolean);
+    distributeCards(columns, cards, mediaRatio);
+
+    // 原图模式：重置列高度跟踪，报告高度
+    if (mediaRatio === 'original') {
+      resetColTracking(columns);
+      cards.forEach(card => {
+        const instance = cardInstances.get(Number(card.dataset.id));
+        if (instance) {
+          instance.resetHeightFlags();
+          if (instance.isHeightReady) { recordCardHeight(instance); } else { recordPlaceholderHeight(instance); }
+        } else {
+          card.dataset.hReported = '';
+          card.dataset.hPlaceholder = '';
+          if (card.dataset.h) { recordCardHeight(card); } else { recordPlaceholderHeight(card); }
+        }
+      });
+    }
 
     observeColumnSentinels();
-    dbg('布局变化', '分配卡片到列', { 卡片数: order.length, 列数: colCount });
+    dbg('布局变化', '分配卡片到列', { 卡片数: cards.length, 列数: colCount, colW });
   }
 
   /* ---------- 重置并加载 ---------- */
@@ -1425,7 +1969,6 @@
     currentPage = 0;
     dom.gridContainer.innerHTML = '';
     dom.loadIndicator.style.display = 'none';
-    dom.noMore.style.display = 'none';
 
     delete tabCardOrder[currentTab];
 
@@ -1437,10 +1980,26 @@
     window._sortedIds = generateSortedIds(currentTab);
 
     // 创建列容器
+    colCount = preferredCols;
+    CARDS_PER_PAGE = ROWS_PER_PAGE * colCount;
+    const gap = parseFloat(getComputedStyle(dom.gridContainer).gap) || 12;
+    const colW = computeFixedColumnWidth(dom.gridContainer.offsetWidth, colCount, 0, 9999, gap, 0.8);
+    _lastColW = colW;
+
     for (let i = 0; i < colCount; i++) {
       const col = document.createElement('div');
       col.className = 'original-column';
+      col.style.width = colW + 'px';
       dom.gridContainer.appendChild(col);
+    }
+
+    // 原图模式初始化列高度跟踪
+    if (mediaRatio === 'original') {
+      resetColTracking(dom.gridContainer.querySelectorAll('.original-column'));
+      // 重置所有缓存卡片的高度标记，确保 loadNextPage 能重新记录
+      for (const instance of cardInstances.values()) {
+        instance.resetHeightFlags();
+      }
     }
 
     loadNextPage();
@@ -1490,7 +2049,7 @@
      ============================================================ */
 
   function setupAnnouncement() {
-    dom.announcementBar.textContent = cfg().announcement || ANNOUNCEMENT;
+    dom.announcementBar.innerHTML = cfg().announcement || ANNOUNCEMENT;
   }
 
   function updatePageTitle() {
@@ -1514,6 +2073,7 @@
   }
 
   function setSidebarEnabled(enabled) {
+    dbg('侧栏', 'setSidebarEnabled', { enabled });
     if (!enabled) {
       dom.sidebar.classList.add('collapsed');
       dom.sidebarExpand.style.display = 'none';
@@ -1531,7 +2091,9 @@
   }
 
   function switchTab(tab) {
+    dbg('用户操作', 'switchTab', { tab, currentTab, tabBarBtnCurrent: tabBarBtn?.getCurrent() });
     if (tab === currentTab && tabBarBtn && tabBarBtn.getCurrent() === tab) {
+      dbg('用户操作', 'switchTab → 跳过（已是当前）', { tab });
       window.scrollTo(0, 0);
       return;
     }
@@ -1539,7 +2101,11 @@
   }
 
   function _handleTabSwitch(tab, isDblClick) {
-    dbg(initializing ? '系统初化' : '用户操作', 'switchTab ' + currentTab + ' → ' + tab, { from: currentTab, to: tab, 缓存数: (tabCardOrder[tab] || []).length, cardDomCache总数: Object.keys(cardDomCache).length });
+    dbg(initializing ? '系统初化' : '用户操作', 'switchTab ' + currentTab + ' → ' + tab, { from: currentTab, to: tab, 缓存数: (tabCardOrder[tab] || []).length, cardDomCache总数: cardInstances.size });
+    // 重置再平衡状态，保证新 tab 滚动到底部能正确触发
+    atBottom = false;
+    scrollPauseLoad = false;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
     currentTab = tab;
     storage.set('currentTab', tab);
 
@@ -1608,21 +2174,37 @@
     // 非敏感tab过滤掉已屏蔽项，敏感tab显示全部
     const renderIds = tab === 'sensitive' ? sortedIds : sortedIds.filter(id => !isBlocked(id));
 
-    dbg('卡片缓存', 'restoreTabCards', { tab, 排序数: sortedIds.length, 渲染数: renderIds.length, 排序后前5: renderIds.slice(0, 5), 缓存总数: Object.keys(cardDomCache).length });
+    dbg('卡片缓存', 'restoreTabCards', { tab, 排序数: sortedIds.length, 渲染数: renderIds.length, 排序后前5: renderIds.slice(0, 5), 缓存总数: cardInstances.size });
     dom.gridContainer.innerHTML = '';
 
     // 创建列容器
+    colCount = preferredCols;
+    CARDS_PER_PAGE = ROWS_PER_PAGE * colCount;
+    const gap = parseFloat(getComputedStyle(dom.gridContainer).gap) || 12;
+    const colW = computeFixedColumnWidth(dom.gridContainer.offsetWidth, colCount, 0, 9999, gap, 0.8);
+    _lastColW = colW;
+
     for (let i = 0; i < colCount; i++) {
       const col = document.createElement('div');
       col.className = 'original-column';
+      col.style.width = colW + 'px';
       dom.gridContainer.appendChild(col);
     }
     const columns = dom.gridContainer.querySelectorAll('.original-column');
+    const cards = renderIds.map(id => getOrCreateCard(id));
+    distributeCards(columns, cards, mediaRatio);
 
-    renderIds.forEach((id, idx) => {
-      const card = getOrCreateCard(id);
-      columns[idx % colCount].appendChild(card);
-    });
+    // 原图模式：重置列高度跟踪，报告高度
+    if (mediaRatio === 'original') {
+      resetColTracking(columns);
+      renderIds.forEach((id, i) => {
+        const instance = cardInstances.get(id);
+        if (instance) {
+          instance.resetHeightFlags();
+          if (instance.isHeightReady) { recordCardHeight(instance); } else { recordPlaceholderHeight(instance); }
+        }
+      });
+    }
 
     // 设置继续加载状态
     window._sortedIds = generateSortedIds(tab);
@@ -1630,7 +2212,6 @@
     currentPage = Math.ceil(curOrder.length / CARDS_PER_PAGE);
 
     dom.loadIndicator.style.display = 'none';
-    dom.noMore.style.display = 'none';
     observeColumnSentinels();
     return true;
   }
@@ -1648,7 +2229,7 @@
     let hidden = false;
 
     const HIDE_THRESHOLD = 80;   // 向下滚动多少 px 后收起
-    const REVEAL_THRESHOLD = 5;  // 向上滚动多少 px 后展开
+    const REVEAL_THRESHOLD = 15;  // 向上滚动多少 px 后展开
     const TOP_SAFE = 10;         // 距顶部多少 px 内强制展开
 
     function init(navEl) {
@@ -1713,8 +2294,9 @@
   class Dropdown {
     // 类级默认值（所有实例共享）
     static DEFAULTS = {
-      LONG_PRESS: 400,
-      AUTO_CLOSE: 3000,
+      LONG_PRESS: 300,
+      LONG_PRESS_TRIGGER: 'immediate',
+      dropdownIndicator: 'border-bottom',  // 'border-bottom' | 'border-top'
       wrapperCls: 'custom-select',
       triggerCls: 'custom-select-value',
       dropdownCls: 'custom-select-dropdown',
@@ -1728,8 +2310,9 @@
      * @param {Array<{text:string,value:string|number}>} opts.items - 选项
      * @param {Function} [opts.onChange] - 选中回调 (value, index)
      * @param {Function} [opts.onOpen] - 打开前回调
-     * @param {number} [opts.longPress] - 长按触发时间(ms)
-     * @param {number} [opts.autoClose] - 长按后自动关闭时间(ms)
+     * @param {number} [opts.longPress] - 长按判断时间阈值(ms)
+     * @param {'immediate'|'release'} [opts.longPressTrigger] - 长按触发模式: 'immediate'=确认后立即触发, 'release'=释放后触发
+     * @param {'border-bottom'|'border-top'} [opts.dropdownIndicator] - 下拉指示器样式: 'border-bottom'=加粗下边框(默认), 'border-top'=加粗上边框
      * @param {string} [opts.wrapperCls] - 自定义外层 class
      * @param {string} [opts.triggerCls] - 自定义触发区 class
      * @param {string} [opts.dropdownCls] - 自定义下拉面板 class
@@ -1741,13 +2324,15 @@
       this.mode = this.cfg.mode || 'click';
       this.onChange = this.cfg.onChange || (() => {});
       this.onOpen = this.cfg.onOpen || null;
+      this.longPressTrigger = this.cfg.longPressTrigger || this.cfg.LONG_PRESS_TRIGGER;
+      this.longPressMs = this.cfg.longPress || this.cfg.LONG_PRESS;
+      this._indicator = this.cfg.dropdownIndicator || Dropdown.DEFAULTS.dropdownIndicator;
 
       // 实例状态
       this.current = 0;
       this._isOpen = false;
       this._pressTimer = null;
       this._longPressFired = false;
-      this._autoCloseTimer = null;
 
       // 构建 DOM
       this._buildDOM();
@@ -1800,11 +2385,13 @@
           this._isOpen ? this.close() : (this.onOpen && this.onOpen(), this.open());
         });
       } else if (this.mode === 'longpress') {
-        this.trigger.addEventListener('click', () => {
-          if (this._longPressFired) { this._longPressFired = false; return; }
+        this.trigger.addEventListener('click', (e) => {
+          if (this._longPressFired) { this._longPressFired = false; e.stopImmediatePropagation(); dbg('Dropdown', 'longpress click → 拦截（长按刚触发）'); return; }
+          dbg('Dropdown', 'longpress click → 普通点击', { isOpen: this._isOpen });
         });
         this.trigger.addEventListener('contextmenu', (e) => {
           e.preventDefault();
+          dbg('Dropdown', '右键菜单 → open');
           this.open();
         });
         this._bindLongPress();
@@ -1818,34 +2405,66 @@
 
     // ---- 长按事件绑定（longpress / both 模式共用） ----
     _bindLongPress() {
-      this.trigger.addEventListener('touchstart', () => this._startPress(), { passive: true });
-      this.trigger.addEventListener('touchend', () => this._cancelPress());
-      this.trigger.addEventListener('touchmove', () => this._cancelPress(), { passive: true });
-      this.trigger.addEventListener('mousedown', (e) => { if (e.button === 0) this._startPress(); });
-      this.trigger.addEventListener('mouseup', () => this._cancelPress());
-      this.trigger.addEventListener('mouseleave', () => this._cancelPress());
+      let startX = 0, startY = 0;
+      this.trigger.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        dbg('Dropdown', 'touchstart → 开始计时', { x: startX, y: startY });
+        this._startPress();
+      }, { passive: true });
+      this.trigger.addEventListener('touchend', () => { dbg('Dropdown', 'touchend → 释放'); this._cancelPress(); });
+      this.trigger.addEventListener('touchmove', (e) => {
+        const dx = Math.abs(e.touches[0].clientX - startX);
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dx > 10 || dy > 10) { dbg('Dropdown', 'touchmove 偏移超限 → 取消', { dx, dy }); this._cancelPress(); }
+      }, { passive: true });
+      this.trigger.addEventListener('mousedown', (e) => { if (e.button === 0) { dbg('Dropdown', 'mousedown → 开始计时'); this._startPress(); } });
+      this.trigger.addEventListener('mouseup', () => { dbg('Dropdown', 'mouseup → 释放'); this._cancelPress(); });
+      this.trigger.addEventListener('touchcancel', () => { dbg('Dropdown', 'touchcancel → 取消'); this._cancelPress(); });
     }
 
     // ---- 长按逻辑（实例级定时器） ----
     _startPress() {
+      dbg('Dropdown', '_startPress', { longPressMs: this.longPressMs, trigger: this.longPressTrigger, isOpen: this._isOpen });
+      // 下拉已打开时（手机端合成 mousedown），忽略重复计时
+      if (this._isOpen) {
+        dbg('Dropdown', '_startPress → 忽略（下拉已打开）');
+        return;
+      }
+      clearTimeout(this._pressTimer);
       this._longPressFired = false;
       this._pressTimer = setTimeout(() => {
         this._longPressFired = true;
-        this.open();
-        this._autoCloseTimer = setTimeout(() => {
-          this.close();
-          this._longPressFired = false;
-        }, this.cfg.autoClose);
-      }, this.cfg.longPress);
+        if (this.longPressTrigger === 'immediate') {
+          dbg('Dropdown', '[immediate] 长按阈值达到 → open，等待释放回弹');
+          this.open();
+        } else {
+          dbg('Dropdown', '[release] 长按阈值达到 → 等待释放触发open');
+        }
+      }, this.longPressMs);
     }
 
     _cancelPress() {
+      const hadTimer = !!this._pressTimer;
       clearTimeout(this._pressTimer);
+      this._pressTimer = null;
+      dbg('Dropdown', '_cancelPress', { hadTimer, longPressFired: this._longPressFired, trigger: this.longPressTrigger, isOpen: this._isOpen });
+      // release 模式：释放时展开
+      if (this.longPressTrigger === 'release' && this._longPressFired && !this._isOpen) {
+        dbg('Dropdown', '[release] 释放达到 → open');
+        this.open();
+      }
+      // 未达到长按阈值就释放 → 回弹按钮
+      if (hadTimer && !this._longPressFired) {
+        dbg('Dropdown', '提前释放 → 回弹按钮');
+        this.trigger.classList.remove('pressed');
+      }
     }
 
     // ---- 下拉定位 ----
     _positionDropdown() {
       const r = this.trigger.getBoundingClientRect();
+      dbg('Dropdown', '定位下拉面板', { top: r.bottom + 4, left: r.left, width: r.width });
       this.dropdown.style.top = (r.bottom + 4) + 'px';
       this.dropdown.style.left = r.left + 'px';
       this.dropdown.style.minWidth = r.width + 'px';
@@ -1862,6 +2481,7 @@
         el.addEventListener('mousedown', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          dbg('Dropdown', '选项点击', { index: i, value: item.value, text: item.text, isCurrent: i === this.current });
           if (i === this.current) { this.close(); return; }
           this.current = i;
           this.trigger.textContent = item.text;
@@ -1869,10 +2489,38 @@
             o.classList.toggle('selected', j === i);
           });
           this.close();
+          dbg('Dropdown', '选项选中 → onChange', { value: item.value, index: i });
           this.onChange(item.value, i);
+          this.trigger.classList.remove('select-bounce');
+          void this.trigger.offsetWidth;
+          this.trigger.classList.add('select-bounce');
         });
         this.dropdown.appendChild(el);
       });
+      this._syncWidth();
+    }
+
+    // ---- 同步宽度：trigger 和 dropdown 固定为最宽选项的宽度 ----
+    _syncWidth() {
+      if (!this._items || this._items.length === 0) return;
+      // 在无约束的临时容器中测量选项自然宽度
+      const tmp = document.createElement('div');
+      tmp.style.cssText = 'position:fixed;visibility:hidden;display:inline-flex;flex-direction:column;left:-9999px;top:0;font-size:13px;font-family:var(--font-body);';
+      const opts = this.dropdown.querySelectorAll('.' + this.cfg.optionCls);
+      opts.forEach(el => tmp.appendChild(el));
+      document.body.appendChild(tmp);
+      let maxW = 0;
+      opts.forEach(el => { if (el.offsetWidth > maxW) maxW = el.offsetWidth; });
+      if (tmp.parentNode) tmp.parentNode.removeChild(tmp);
+      // 选项归还给 dropdown
+      opts.forEach(el => this.dropdown.appendChild(el));
+      if (maxW > 0) {
+        const existing = parseFloat(getComputedStyle(this.trigger).minWidth) || 0;
+        const finalW = Math.max(maxW, existing);
+        const px = finalW + 'px';
+        this.trigger.style.minWidth = px;
+        this.dropdown.style.minWidth = px;
+      }
     }
 
     // ---- 下拉滚轮 ----
@@ -1884,9 +2532,12 @@
     // ---- 公开 API ----
 
     open() {
+      dbg('Dropdown', 'open → 展开下拉', { triggerText: this.trigger.textContent, itemCount: (this._items || []).length });
       this._positionDropdown();
       document.body.appendChild(this.dropdown);
       this.wrap.classList.add('open');
+      this.dropdown.classList.add('open');
+      if (this._indicator !== 'none') this.trigger.classList.add('indicator-' + this._indicator);
       this._isOpen = true;
       const sel = this.dropdown.querySelector('.' + this.cfg.optionCls + '.selected');
       if (sel) sel.scrollIntoView({ block: 'nearest' });
@@ -1895,7 +2546,10 @@
 
     close() {
       if (!this._isOpen) return;
+      dbg('Dropdown', 'close → 收起下拉');
       this.wrap.classList.remove('open');
+      this.dropdown.classList.remove('open');
+      this.trigger.classList.remove('indicator-border-top', 'indicator-border-bottom');
       this.dropdown.removeEventListener('wheel', this._onDropdownWheel);
       if (this.dropdown.parentNode) this.dropdown.parentNode.removeChild(this.dropdown);
       this._isOpen = false;
@@ -1917,9 +2571,11 @@
     getIndex() { return this.current; }
 
     setItems(items) {
+      dbg('Dropdown', 'setItems → 设置选项', { count: items.length, values: items.map(i => i.value) });
       this._items = items;
+      this.current = -1;
       this._buildOptions();
-      this.trigger.textContent = items[this.current]?.text || '';
+      // 不自动覆盖trigger文本，由调用方控制
     }
 
     rebuild() {
@@ -1941,7 +2597,7 @@
   /* ---------- 导航栏 TabBar 组件 ---------- */
 
   class TabBarBtn {
-    static DEFAULTS = { DBL_CLICK: 300, OVERFLOW_THRESHOLD: 80 };
+    static DEFAULTS = { DBL_CLICK: 300, OVERFLOW_THRESHOLD: 80, align: 'left' };
 
     constructor(navEl, opts = {}) {
       this.cfg = Object.assign({}, TabBarBtn.DEFAULTS, opts);
@@ -1951,8 +2607,13 @@
       this._currentTab = null;
       this._lastClick = {};
 
+      // 对齐模式
+      if (this.cfg.align === 'center') {
+        this._tabGroup.classList.add('align-center');
+      }
+
       const btns = this._tabGroup.querySelectorAll('.tab-btn[data-tab]');
-      dbg('系统初化', 'TabBarBtn构造', { 按钮数: btns.length, tabGroup: this._tabGroup.className });
+      dbg('系统初化', 'TabBarBtn构造', { 按钮数: btns.length, tabGroup: this._tabGroup.className, align: this.cfg.align });
       btns.forEach(btn => this._bindBtn(btn));
       this._initOverflow();
       requestAnimationFrame(() => this.recalcOverflow());
@@ -1965,55 +2626,78 @@
       btn.addEventListener('mouseleave', () => btn.classList.remove('tab-pressed'));
       btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
+        dbg('TabBtn', 'click', { tab, currentTab: this._currentTab, isCurrent: this._currentTab === tab });
         if (this._currentTab === tab) {
           const now = Date.now();
           const last = this._lastClick[tab] || 0;
           if (now - last < this.cfg.DBL_CLICK) {
             this._lastClick[tab] = 0;
+            dbg('TabBtn', '双击当前tab → 回顶部+重排序', { tab });
             this._onSwitch(tab, true);
             window.scrollTo(0, 0);
             return;
           }
           this._lastClick[tab] = now;
+          dbg('TabBtn', '单击当前tab → switchTo', { tab });
+          this.switchTo(tab);
+          return;
         }
+        dbg('TabBtn', '单击其他tab → switchTo', { tab });
         this.switchTo(tab);
       });
     }
 
     // ---- MoreButton 初始化 ----
     _initOverflow() {
+      const self = this;
+      let lastClickTime = 0;
+
       // 直接使用 Dropdown 的 wrap 作为 DOM 元素（不再手动创建重复节点）
       const dd = new Dropdown({
         mode: 'longpress',
         parent: null,
-        longPress: 400,
-        autoClose: 3000,
+        longPress: 300,
+        longPressTrigger: 'immediate',
+        dropdownIndicator: 'none',
         wrapperCls: 'tab-more-wrap',
         triggerCls: 'tab-more-btn',
         dropdownCls: 'tab-more-dropdown',
         optionCls: 'tab-more-option',
+        onOpen: () => {
+          // 长按打开下拉时，取消press视觉效果
+          dd.getTrigger().classList.remove('pressed');
+        },
+        onChange: (val) => {
+          // 下拉选项选中时切换tab
+          dbg('MoreBtn', '下拉选项选中 → switchTo', { value: val });
+          self.switchTo(val);
+        },
       });
 
       const wrap = dd.getWrap();
       const btn = dd.getTrigger();
+      btn.id = 'tabMoreBtn';
       btn.textContent = '更多';
       this._tabGroup.appendChild(wrap);
 
-      let lastClickTime = 0;
-      const self = this;
+      // 覆盖Dropdown默认的click行为：点击切换到当前绑定的tab
       btn.addEventListener('click', () => {
-        if (dd._longPressFired) { dd._longPressFired = false; return; }
+        dbg('MoreBtn', 'click', { longPressFired: dd._longPressFired, tab: btn.dataset.tab, currentTab: self._currentTab });
+        if (dd._longPressFired) { dd._longPressFired = false; dbg('MoreBtn', 'click → 拦截（longpress刚触发）'); return; }
         const tab = btn.dataset.tab;
-        if (!tab) return;
+        if (!tab) { dbg('MoreBtn', 'click → 无绑定tab，跳过'); return; }
         const now = Date.now();
         if (now - lastClickTime < self.cfg.DBL_CLICK) {
           lastClickTime = 0;
+          dbg('MoreBtn', '双击 → 回顶部+重排序', { tab });
           self._onSwitch(tab, true);
           window.scrollTo(0, 0);
           return;
         }
         lastClickTime = now;
+        dbg('MoreBtn', '单击 → switchTo', { tab });
         self.switchTo(tab);
+        return;
       });
 
       this._moreWrap = wrap;
@@ -2028,11 +2712,13 @@
     }
 
     // ---- 溢出重算 ----
+    _lastOverflowSig = '';
+    _hasOverflow = false;
     recalcOverflow() {
       const tabBtns = Array.from(this._tabGroup.querySelectorAll('.tab-btn[data-tab]'));
-      if (tabBtns.length === 0) { dbg('布局变化', 'recalcOverflow: 无按钮'); return; }
+      if (tabBtns.length === 0) return;
 
-      // 步骤1: 全部显示，隐藏更多按钮
+      // 步骤1: 全部显示，隐藏更多按钮以获取tab按钮自然宽度
       tabBtns.forEach(b => b.style.display = '');
       this._moreWrap.style.display = 'none';
       this._moreDD.close();
@@ -2045,54 +2731,71 @@
       const navLeftGap = navLeft ? (parseFloat(getComputedStyle(navLeft).gap) || 0) : 0;
       const containerWidth = navLeftWidth - channelWidth - (channelWidth > 0 ? navLeftGap : 0);
 
-      // 步骤3: 逐按钮测量
+      // 步骤3: 计算所有按钮总宽度
       const gap = 4;
+      let totalWidth = 0;
+      for (let i = 0; i < tabBtns.length; i++) {
+        totalWidth += tabBtns[i].offsetWidth + (i > 0 ? gap : 0);
+      }
+
+      // 签名：宽度变化 或 按钮数变化 都需要重算
+      const sig = Math.round(containerWidth) + '|' + tabBtns.length;
+      if (sig === this._lastOverflowSig && !this._hasOverflow) return;
+      this._lastOverflowSig = sig;
+
+      // 全部放得下 → 保持步骤1的恢复状态（全显示、更多隐藏），直接返回
+      if (totalWidth <= containerWidth) {
+        this._hasOverflow = false;
+        dbg('布局变化', 'recalcOverflow: 全部可见', { totalWidth, containerWidth });
+        return;
+      }
+
+      // 步骤4: 预设"更多"按钮文本为最长tab名，测量其最大宽度
+      const longestName = tabBtns.reduce((max, b) => b.textContent.length > max.length ? b.textContent : max, '');
+      this._moreBtn.textContent = longestName;
+      this._moreWrap.style.display = '';
+      const moreBtnWidth = this._moreWrap.offsetWidth;
+      this._moreWrap.style.display = 'none';
+
+      // 计算可容纳的按钮数（为"更多"按钮预留空间）
       let accumulated = 0;
-      let firstOverflowIdx = -1;
-      const btnWidths = [];
+      let firstOverflowIdx = tabBtns.length;
       for (let i = 0; i < tabBtns.length; i++) {
         const w = tabBtns[i].offsetWidth;
-        btnWidths.push({ tab: tabBtns[i].dataset.tab, w, acc: accumulated + w });
-        if (accumulated + w > containerWidth - this.cfg.OVERFLOW_THRESHOLD) { firstOverflowIdx = i; break; }
+        if (accumulated + w + moreBtnWidth > containerWidth) { firstOverflowIdx = i; break; }
         accumulated += w + gap;
       }
 
       dbg('布局变化', 'recalcOverflow测量', {
         navLeftWidth, channelWidth, navLeftGap, containerWidth,
-        阈值: containerWidth - this.cfg.OVERFLOW_THRESHOLD,
+        totalWidth, moreBtnWidth,
         按钮数: tabBtns.length,
-        按钮宽度: btnWidths,
         firstOverflowIdx,
-        更多按钮在DOM: !!this._moreWrap.parentNode,
-        更多按钮display: this._moreWrap.style.display,
+        longestName,
       });
 
-      // 步骤4: 无溢出则完成
-      if (firstOverflowIdx === -1) { dbg('布局变化', 'recalcOverflow: 无溢出，全部可见'); return; }
+      if (firstOverflowIdx >= tabBtns.length) {
+        this._hasOverflow = false;
+        dbg('布局变化', 'recalcOverflow: 无溢出');
+        return;
+      }
+      if (firstOverflowIdx === 0) firstOverflowIdx = 1; // 至少保留一个可见按钮
+      this._hasOverflow = true;
 
-      // 步骤5: 收起溢出tab + 最后一个可见tab
-      const lastFitIdx = Math.max(0, firstOverflowIdx - 1);
-      const lastFitTab = tabBtns[lastFitIdx];
-      const allMoreTabs = [lastFitTab, ...tabBtns.slice(firstOverflowIdx)];
-
+      // 步骤5: 隐藏溢出tab，显示"更多"按钮（始终在末尾）
+      const allMoreTabs = tabBtns.slice(firstOverflowIdx);
       allMoreTabs.forEach(b => b.style.display = 'none');
       this._moreWrap.style.display = '';
-      if (lastFitTab.nextSibling) {
-        this._tabGroup.insertBefore(this._moreWrap, lastFitTab.nextSibling);
-      } else {
-        this._tabGroup.appendChild(this._moreWrap);
-      }
 
       const active = allMoreTabs.find(b => b.classList.contains('active')) || allMoreTabs[0];
       this._moreBtn.dataset.tab = active.dataset.tab;
-      this._moreBtn.textContent = active.textContent + ' ▾';
+      this._moreBtn.textContent = active.textContent;
       this._moreBtn.classList.toggle('active', active.classList.contains('active'));
 
       const items = allMoreTabs
         .filter(b => b !== active)
         .map(b => ({ text: b.textContent, value: b.dataset.tab }));
       this._moreDD.setItems(items);
-      this._moreDD.onChange = (val) => { this.switchTo(val); };
 
       dbg('布局变化', 'recalcOverflow完成', {
         隐藏按钮: allMoreTabs.map(b => b.dataset.tab),
@@ -2103,7 +2806,6 @@
 
     // ---- 公开 API ----
     switchTo(tab) {
-      if (this._currentTab === tab) return;
       dbg('用户操作', 'TabBarBtn.switchTo', { from: this._currentTab, to: tab });
       this._currentTab = tab;
       this._tabGroup.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
@@ -2387,6 +3089,7 @@
 
   function updateSidebarState() {
     const collapsed = dom.sidebar.classList.contains('collapsed');
+    dbg('侧栏', 'updateSidebarState', { collapsed, expandBtnDisplay: collapsed ? 'flex' : 'none' });
     dom.sidebarExpand.style.display = collapsed ? 'flex' : 'none';
   }
 
@@ -2523,14 +3226,13 @@
      ============================================================ */
 
   function applyColCount() {
-    dbg(initializing ? '系统初化' : '布局变化', 'applyColCount', { colCount });
-    dom.gridContainer.style.setProperty('--col-count', colCount);
-    storage.set('colCount', colCount);
+    dbg(initializing ? '系统初化' : '布局变化', 'applyColCount', { colCount, preferredCols });
+    storage.set('colCount', preferredCols);
 
-    // 更新按钮状态
+    // 更新按钮状态（高亮用户首选列数）
     dom.colSwitch.querySelectorAll('.col-btn').forEach(btn => {
       const n = parseInt(btn.dataset.col);
-      btn.classList.toggle('active', n === colCount);
+      btn.classList.toggle('active', n === preferredCols);
       btn.classList.toggle('disabled', n < minCols || n > maxCols);
     });
   }
@@ -2551,12 +3253,11 @@
       btn.addEventListener('click', () => {
         const n = parseInt(btn.dataset.col);
         if (n < minCols || n > maxCols) return;
-        if (n === colCount) return;
-        dbg('用户操作', '列数按钮点击', { from: colCount, to: n });
-        colCount = n;
-        CARDS_PER_PAGE = ROWS_PER_PAGE * colCount;
-        applyColCount();
+        if (n === preferredCols) return;
+        dbg('用户操作', '列数按钮点击', { from: preferredCols, to: n });
+        preferredCols = n;
         rebuildOriginalColumns();
+        applyColCount();
       });
     });
   }
@@ -2820,9 +3521,8 @@
       storage.set('themeIndex', themeIndex);
     }
     if (ch.useColCount != null) {
-      colCount = Math.max(minCols, Math.min(maxCols, ch.useColCount));
-      CARDS_PER_PAGE = ROWS_PER_PAGE * colCount;
-      storage.set('colCount', colCount);
+      preferredCols = Math.max(minCols, Math.min(maxCols, ch.useColCount));
+      storage.set('colCount', preferredCols);
     }
     if (ch.useRatio != null && RATIO_MAP[ch.useRatio] !== undefined) {
       mediaRatio = ch.useRatio;
@@ -2834,7 +3534,7 @@
     }
     window.scrollTo(0, 0);
 
-    tabBarBtn = new TabBarBtn(dom.tabNav, { onSwitch: _handleTabSwitch });
+    tabBarBtn = new TabBarBtn(dom.tabNav, { onSwitch: _handleTabSwitch, align: 'center' });
     setupTheme();
     setupConfig();
     setupRatio();
@@ -2849,13 +3549,20 @@
     DeviceEnv.subscribe((type) => {
       dbg('布局变化', '设备类型变化', { type });
       maxCols = type === 'mobile' ? 2 : 5;
-      if (colCount > maxCols) {
-        colCount = maxCols;
-        CARDS_PER_PAGE = ROWS_PER_PAGE * colCount;
-      }
+      preferredCols = Math.min(preferredCols, maxCols);
+      rebuildOriginalColumns();
       setupColSwitch();
       tabBarBtn.recalcOverflow();
     });
+
+    // 屏幕宽度变化时重新计算列宽（列数固定）
+    let colResizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(colResizeTimer);
+      colResizeTimer = setTimeout(() => {
+        applyColumnWidths();
+      }, 150);
+    }, { passive: true });
 
     // 用户实际滚动时恢复加载
     window.addEventListener('scroll', () => {
@@ -2883,6 +3590,12 @@
       });
       resizeObserver.observe(navLeft);
     }
+
+    // ResizeObserver 监听 grid-container，零延迟重算列宽
+    const colResizeObserver = new ResizeObserver(() => {
+      applyColumnWidths();
+    });
+    colResizeObserver.observe(dom.gridContainer);
 
     // 字体加载完成后重新计算tab溢出
     if (document.fonts && document.fonts.ready) {

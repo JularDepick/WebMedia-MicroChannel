@@ -1,4 +1,6 @@
-/* ========== CSS Variables ========== */
+/* ==========================================================
+   CSS Variables
+   ========================================================== */
 :root {
   --sidebar-width: 40px;
   --sidebar-collapsed: 0px;
@@ -33,7 +35,9 @@
   --success: #2ecc71;
 }
 
-/* ========== Reset ========== */
+/* ==========================================================
+   Reset
+   ========================================================== */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -44,6 +48,10 @@ html {
   scroll-behavior: auto;
   font-size: 14px;
   overflow-x: hidden;
+  scrollbar-width: none;          /* Firefox */
+}
+html::-webkit-scrollbar {
+  display: none;                  /* Chrome/Safari/Edge */
 }
 
 body {
@@ -76,17 +84,22 @@ button {
   color: inherit;
 }
 
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-hover);
+  text-underline-offset: 3px;
+  transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-hover);
+  text-decoration-color: var(--link-underline);
+}
+
 img {
   display: block;
   max-width: 100%;
-}
-
-/* ========== Scrollbar ========== */
-html {
-  scrollbar-width: none;          /* Firefox */
-}
-html::-webkit-scrollbar {
-  display: none;                  /* Chrome/Safari/Edge */
 }
 
 /* 内部可滚动区域保留细滚动条 */
@@ -104,7 +117,9 @@ html::-webkit-scrollbar {
   background: var(--text-muted);
 }
 
-/* ========== Sidebar ========== */
+/* ==========================================================
+   Sidebar
+   ========================================================== */
 .sidebar {
   position: fixed;
   left: 0;
@@ -168,7 +183,7 @@ html::-webkit-scrollbar {
   white-space: nowrap;
 }
 
-/* ========== Sidebar Expand Button ========== */
+/* Sidebar Expand Button */
 .sidebar-expand-btn {
   position: fixed;
   left: 0;
@@ -201,9 +216,12 @@ html::-webkit-scrollbar {
   transform: translateY(-50%);
   width: 44px;
   height: 44px;
+  pointer-events: none;
 }
 
-/* ========== Back to Top ========== */
+/* ==========================================================
+   Back to Top
+   ========================================================== */
 .back-to-top {
   position: fixed;
   left: 14px;
@@ -238,16 +256,26 @@ html::-webkit-scrollbar {
   background: var(--bg-tertiary);
 }
 
-/* ========== Main Content ========== */
+/* ==========================================================
+   Main Content
+   ========================================================== */
 .main-content {
   min-height: 100vh;
   padding-left: 0;
 }
 
-/* ========== Tab Navigation ========== */
+.nav-spacer {
+  height: var(--tab-height);
+}
+
+/* ==========================================================
+   Tab Navigation
+   ========================================================== */
 .tab-nav {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 70;
   display: flex;
   align-items: center;
@@ -282,6 +310,12 @@ html::-webkit-scrollbar {
 .tab-group {
   display: flex;
   gap: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.tab-group.align-center {
+  justify-content: center;
 }
 
 .tab-btn {
@@ -294,6 +328,8 @@ html::-webkit-scrollbar {
   transition: all var(--transition-fast);
   position: relative;
   font-family: var(--font-body);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .tab-btn:hover {
@@ -324,20 +360,106 @@ html::-webkit-scrollbar {
   border-radius: 1px;
 }
 
-/* ========== Tab More Button ========== */
+/* ==========================================================
+   Dropdown（通用下拉控件）
+   ========================================================== */
+.custom-select {
+  position: relative;
+  width: fit-content;
+  align-self: flex-start;
+  font-size: 13px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.custom-select-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-bottom: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition-fast);
+  position: relative;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.custom-select:hover .custom-select-value {
+  border-color: var(--accent);
+}
+
+.custom-select.open .custom-select-value {
+  border-color: var(--accent);
+}
+
+.custom-select-dropdown {
+  position: fixed;
+  min-width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  z-index: 10000;
+  max-height: calc(6 * 35px);
+  overflow-y: auto;
+}
+
+.custom-select-option {
+  padding: 8px 10px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.custom-select-option:hover {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.custom-select-option.selected {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* 下拉指示器（open 时由 JS 添加到 trigger） */
+.indicator-border-bottom {
+  border-bottom: 2px solid var(--accent) !important;
+}
+.indicator-border-top {
+  border-top: 2px solid var(--accent) !important;
+}
+
+/* ==========================================================
+   Tab More Button（"更多"按钮及下拉）
+   ========================================================== */
 .tab-more-wrap {
   position: relative;
 }
 
 .tab-more-btn {
-  padding: 8px 16px;
+  padding: 8px 20px;
   font-size: 13px;
   font-weight: 500;
+  letter-spacing: 0.5px;
   color: var(--text-secondary);
+  border: none;
+  border-top: 2px solid var(--accent);
+  border-bottom: 1px solid var(--border);
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
   position: relative;
   font-family: var(--font-body);
+  cursor: pointer;
+  min-width: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .tab-more-btn:hover {
@@ -345,26 +467,20 @@ html::-webkit-scrollbar {
   background: var(--bg-tertiary);
 }
 
+.tab-more-btn:active,
+.tab-more-btn.tab-pressed {
+  transform: scale(0.95);
+  opacity: 0.7;
+}
+
 .tab-more-btn.active {
   color: var(--accent);
   background: var(--accent-dim);
 }
 
-.tab-more-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 2px;
-  background: var(--accent);
-  border-radius: 1px;
-}
-
-.tab-more-btn.tab-pressed {
-  transform: scale(0.95);
-  opacity: 0.7;
+.tab-more-wrap.open .tab-more-btn {
+  color: var(--accent);
+  background: var(--accent-dim);
 }
 
 .tab-more-dropdown {
@@ -402,47 +518,9 @@ html::-webkit-scrollbar {
   font-weight: 500;
 }
 
-/* ========== Column Switch ========== */
-.col-switch {
-  display: inline-flex;
-  align-self: flex-start;
-  gap: 3px;
-  background: var(--bg-tertiary);
-  padding: 3px;
-  border-radius: var(--radius-sm);
-}
-
-.col-btn {
-  width: 36px;
-  height: 30px;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: var(--font-display);
-  color: var(--text-muted);
-  border-radius: 3px;
-  transition: all var(--transition-fast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.col-btn:hover {
-  color: var(--text-primary);
-  background: rgba(255,255,255,0.05);
-}
-
-.col-btn.active {
-  color: var(--accent);
-  background: var(--bg-secondary);
-  box-shadow: var(--shadow-sm);
-}
-
-.col-btn.disabled {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-/* ========== Settings Toggle ========== */
+/* ==========================================================
+   Settings
+   ========================================================== */
 .settings-toggle {
   width: 36px;
   height: 36px;
@@ -461,22 +539,6 @@ html::-webkit-scrollbar {
   background: var(--bg-tertiary);
 }
 
-/* ========== Disabled Button ========== */
-.disabled-btn {
-  opacity: 0.4;
-  pointer-events: none;
-  cursor: default;
-}
-
-.media-card.card-disabled {
-  opacity: 0.6;
-}
-
-.media-card.card-disabled .card-media-wrap {
-  filter: grayscale(0.8);
-}
-
-/* ========== Settings Panel ========== */
 .settings-panel {
   position: fixed;
   right: 0;
@@ -551,7 +613,45 @@ html::-webkit-scrollbar {
   letter-spacing: 1px;
 }
 
-/* ========== Ratio Switch ========== */
+.col-switch {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 3px;
+  background: var(--bg-tertiary);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.col-btn {
+  width: 36px;
+  height: 30px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--text-muted);
+  border-radius: 3px;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.col-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.05);
+}
+
+.col-btn.active {
+  color: var(--accent);
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.col-btn.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 .ratio-switch {
   display: flex;
   flex-wrap: wrap;
@@ -578,7 +678,6 @@ html::-webkit-scrollbar {
   background: var(--accent-dim);
 }
 
-/* ========== Settings Select ========== */
 .settings-select {
   width: fit-content;
   align-self: flex-start;
@@ -608,70 +707,9 @@ html::-webkit-scrollbar {
   color: var(--text-primary);
 }
 
-/* ========== Custom Select (替代原生select) ========== */
-.custom-select {
-  position: relative;
-  width: fit-content;
-  align-self: flex-start;
-  font-size: 13px;
-  font-family: var(--font-body);
-  cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.custom-select-value {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 10px;
-  color: var(--text-primary);
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-bottom: 2px solid var(--accent);
-  border-radius: var(--radius-sm);
-  transition: border-color var(--transition-fast);
-  position: relative;
-}
-
-.custom-select:hover .custom-select-value {
-  border-color: var(--accent);
-}
-
-.custom-select.open .custom-select-value {
-  border-color: var(--accent);
-}
-
-.custom-select-dropdown {
-  position: fixed;
-  min-width: 100%;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
-  z-index: 10000;
-  max-height: calc(6 * 35px);
-  overflow-y: auto;
-}
-
-.custom-select-option {
-  padding: 8px 10px;
-  color: var(--text-primary);
-  white-space: nowrap;
-  transition: background var(--transition-fast), color var(--transition-fast);
-}
-
-.custom-select-option:hover {
-  background: var(--accent-dim);
-  color: var(--accent);
-}
-
-.custom-select-option.selected {
-  color: var(--accent);
-  font-weight: 500;
-}
-
-/* ========== Info Bars ========== */
+/* ==========================================================
+   Info Bars
+   ========================================================== */
 .info-bar {
   padding: 6px 20px;
   font-size: 13px;
@@ -688,12 +726,21 @@ html::-webkit-scrollbar {
   padding: 10px 20px;
 }
 
+.announcement-bar img {
+  display: inline;
+  vertical-align: middle;
+  height: 1.5em;
+  width: auto;
+}
+
 .description-bar {
   color: var(--text-secondary);
   border-bottom: 1px solid var(--border);
 }
 
-/* ========== Grid Container (多列浮动布局) ========== */
+/* ==========================================================
+   Grid Container（多列浮动布局）
+   ========================================================== */
 .grid-container {
   display: flex;
   gap: var(--grid-gap);
@@ -701,14 +748,14 @@ html::-webkit-scrollbar {
   min-height: calc(100vh - var(--tab-height));
   width: 100%;
   overflow: hidden;
+  justify-content: center;
 }
 
 .grid-container .original-column {
-  flex: 1;
-  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--grid-gap);
+  flex: 0 0 auto;
 }
 
 /* 原图模式：媒体自然尺寸 */
@@ -723,7 +770,9 @@ html::-webkit-scrollbar {
   display: block;
 }
 
-/* ========== Image Card ========== */
+/* ==========================================================
+   Media Card（媒体卡片）
+   ========================================================== */
 .media-card {
   position: relative;
   border-radius: var(--radius-md);
@@ -790,7 +839,29 @@ html::-webkit-scrollbar {
   opacity: 1;
 }
 
-/* ========== Control Bar ========== */
+.media-card.card-disabled {
+  opacity: 0.6;
+}
+
+.media-card.card-disabled .card-media-wrap {
+  filter: grayscale(0.8);
+}
+
+/* 敏感页已屏蔽卡片 */
+.media-card.card-blocked .card-media-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ==========================================================
+   Control Bar（卡片操作栏）
+   ========================================================== */
 .control-bar {
   display: flex;
   align-items: center;
@@ -807,12 +878,14 @@ html::-webkit-scrollbar {
   align-items: center;
   justify-content: center;
   gap: 1px;
-  min-width: 32px;
+  min-width: 0;
+  flex: 1 1 0;
   padding: 4px 2px;
   font-size: 14px;
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
+  overflow: hidden;
 }
 
 .ctrl-btn:hover {
@@ -858,50 +931,15 @@ html::-webkit-scrollbar {
   background: #c0392b;
 }
 
-/* ========== 敏感页已屏蔽卡片 ========== */
-.media-card.card-blocked .card-media-wrap::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  z-index: 1;
+.disabled-btn {
+  opacity: 0.4;
   pointer-events: none;
+  cursor: default;
 }
 
-/* ========== Load Indicator ========== */
-.load-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 24px;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-.load-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.no-more {
-  text-align: center;
-  padding: 32px;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-/* ========== Tags ========== */
+/* ==========================================================
+   Tags（书签系统）
+   ========================================================== */
 .tag-layer {
   position: absolute;
   right: 0;
@@ -1008,7 +1046,9 @@ html::-webkit-scrollbar {
   z-index: 100;
 }
 
-/* ========== Fullscreen Modal ========== */
+/* ==========================================================
+   Fullscreen Modal
+   ========================================================== */
 .fullscreen-modal {
   position: fixed;
   inset: 0;
@@ -1095,7 +1135,52 @@ html::-webkit-scrollbar {
   cursor: grabbing;
 }
 
-/* ========== Toast ========== */
+/* ==========================================================
+   Load Indicator & Animations
+   ========================================================== */
+.load-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.load-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes selectBounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.select-bounce {
+  animation: selectBounce 0.25s ease-out;
+}
+
+.no-more {
+  text-align: center;
+  padding: 32px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ==========================================================
+   Toast
+   ========================================================== */
 .toast {
   position: fixed;
   bottom: 40px;
@@ -1119,7 +1204,9 @@ html::-webkit-scrollbar {
   transform: translateX(-50%) translateY(0);
 }
 
-/* ========== Empty State ========== */
+/* ==========================================================
+   Empty State
+   ========================================================== */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -1139,7 +1226,9 @@ html::-webkit-scrollbar {
   font-size: 14px;
 }
 
-/* ========== Responsive (ratio-vertical removed, using object-fit: contain) ========== */
+/* ==========================================================
+   Responsive
+   ========================================================== */
 @media (max-width: 768px) {
   :root {
     --sidebar-width: 36px;
@@ -1168,10 +1257,10 @@ html::-webkit-scrollbar {
   }
 
   .ctrl-btn {
-    min-width: 36px;
+    min-width: 0;
     padding: 4px 2px;
     font-size: 13px;
-    flex-shrink: 0;
+    flex-shrink: 1;
   }
 
   .ctrl-btn .ctrl-label {

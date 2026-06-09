@@ -14,9 +14,9 @@ import argparse
 from pathlib import Path
 
 # ==================== 配置区域 ====================
-DEFAULT_LIST_FILE = "C:\\Users\\liwenfang\\Desktop\\accepted\\.list.txt"       # 默认列表文件路径（若命令行未提供 --list，则必须配置此项或通过命令行提供）
+DEFAULT_LIST_FILE = "C:\\Users\\liwenfang\\Desktop\\image\\.list.txt"       # 默认列表文件路径（若命令行未提供 --list，则必须配置此项或通过命令行提供）
 DEFAULT_SOURCE_DIR = "C:\\Users\\liwenfang\\Desktop\\image\\"      # 默认源目录B（若命令行未提供 --source，则使用此配置）
-DEFAULT_DEST_DIR = "C:\\Users\\liwenfang\\Desktop\\accept\\"        # 默认目标目录C
+DEFAULT_DEST_DIR = "C:\\Users\\liwenfang\\Desktop\\accepted\\"        # 默认目标目录C
 DEFAULT_ACTION = "copy"        # 默认操作：'copy' 或 'move'
 DEFAULT_CONFLICT = "skip"      # 默认冲突处理：'skip' 或 'overwrite'
 # ================================================

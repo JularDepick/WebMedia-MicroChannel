@@ -11,10 +11,10 @@ import argparse
 import sys
 
 # ========== 全局常量设定区域 ==========
-DEFAULT_TARGET_DIR = "C:\\Users\\liwenfang\\Desktop\\web图片浏览器\\images"  # 默认目标目录
+DEFAULT_TARGET_DIR = "C:\\Users\\liwenfang\\GitHub\\JularDepick\\WebMedia-MicroChannel\\src\\images"  # 默认目标目录
 DEFAULT_PREFIX = "beauty-"                     # 默认前缀
 DEFAULT_SUFFIX = ".jpg"                      # 默认后缀（包含点号）
-DEFAULT_DIGITS = 3                           # 默认数字位数（仅当补零时生效）
+DEFAULT_DIGITS = 4                           # 默认数字位数（仅当补零时生效）
 DEFAULT_START_NUM = 1                        # 默认起始数字
 DEFAULT_PAD_ZERO = True                      # 默认是否补齐前导零
 DEFAULT_NATURAL_SORT = False                 # 默认是否使用自然排序
