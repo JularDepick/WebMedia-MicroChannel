@@ -34,7 +34,7 @@
   const CHANNEL_CONFIGS = [
     {
       id: 'aaaaaaa0',
-      name: '美女写真',
+      name: '写真',
       nickname: 'CAIT-AI创意竞赛-WMMC团队参赛作品-在线媒体微频道',
       announcement: '本项目为CAIT组织的 “AI织页,视呈万象” 创意竞赛参赛作品<br>\
           开发与调试：<a href="https://github.com/JularDepick/">李文芳</a>、<a href="https://claude.com"><img src="https://img.shields.io/badge/Claude_Code-orange?style=flat&logo=claude&logoColor=white" title="Claude官网"/></a>、<a href="https://platform.xiaomimimo.com"><img src="https://img.shields.io/badge/XiaomiMiMo-grey?style=flat&logo=xiaomi&logoColor=white" title="XiaomiMiMo官网"/></a><br>\
@@ -62,7 +62,7 @@
     },
     {
       id: 'aaaaaaa0',
-      name: '美女写真-OSS',
+      name: '快源',
       nickname: 'CAIT-AI创意竞赛-WMMC团队参赛作品-在线媒体微频道',
       announcement: '本项目为CAIT组织的 “AI织页,视呈万象” 创意竞赛参赛作品<br>\
           开发与调试：<a href="https://github.com/JularDepick/">李文芳</a>、<a href="https://claude.com"><img src="https://img.shields.io/badge/Claude_Code-orange?style=flat&logo=claude&logoColor=white" title="Claude官网"/></a>、<a href="https://platform.xiaomimimo.com"><img src="https://img.shields.io/badge/XiaomiMiMo-grey?style=flat&logo=xiaomi&logoColor=white" title="XiaomiMiMo官网"/></a><br>\
@@ -3513,7 +3513,10 @@
   function checkFirstVisit() {
     if (!ENABLE_FIRST_VISIT_GUIDE) return;
     if (localStorage.getItem('visited') === 'true') return;
-    alert(GUIDE_ANNOUNCEMENT);
+    // 使用 toast 替代 alert，提供更友好的首次访问体验
+    setTimeout(() => {
+      showToast(GUIDE_ANNOUNCEMENT, 5000);
+    }, 1000);
     localStorage.setItem('visited', 'true');
   }
 
