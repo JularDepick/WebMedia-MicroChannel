@@ -87,6 +87,34 @@
       mediaIdMax: 157,
       mediaExt: '.jpg',
       mediaType: 'img'
+    },
+    {
+      id: 'aaaaaaa1',
+      name: '童年',
+      nickname: 'CAIT-AI创意竞赛-WMMC团队参赛作品-在线媒体微频道',
+      announcement: '本项目为CAIT组织的 “AI织页,视呈万象” 创意竞赛参赛作品<br>\
+          开发与调试：<a href="https://github.com/JularDepick/">李文芳</a>、<a href="https://claude.com"><img src="https://img.shields.io/badge/Claude_Code-orange?style=flat&logo=claude&logoColor=white" title="Claude官网"/></a>、<a href="https://platform.xiaomimimo.com"><img src="https://img.shields.io/badge/XiaomiMiMo-grey?style=flat&logo=xiaomi&logoColor=white" title="XiaomiMiMo官网"/></a><br>\
+          图片资源审核：<a href="https://github.com/protect408/">徐健豪</a>、<a href="https://github.com/PQX-666/">彭启轩</a><br>\
+          开源地址：<a href="https://github.com/JularDepick/WebMedia-MicroChannel"><img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" title="GitHub仓库地址"/></a><br>\
+          发现高危漏洞请请报告：<a href="mailto:JudeBlack@qq.com">JudeBlack@qq.com</a><br>\
+          <b>操作教程：左上角按钮切换频道，探索页随机加载图片，推荐页及其后继页面按热门排序，长按最后一个按钮展开隐藏，左上角侧栏使用书签功能，右上角设置调整显示</b><br>\
+          <font color="red"><b>*重要声明：媒体资源均来源于互联网，经过严格的人工审核，无不良引导，请注意甄别，非盈利性质，如侵权请联系删除<b></font><br>\
+          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-home-page&left_text=views"/>',
+      iconSrc: '',
+      useTheme: null,
+      useColCount: null,
+      useRatio: null,
+      backend: 'api/',
+      dbPath: 'sqlitedb/cait/',
+      dbName: 'cait20260609-1.db',
+      tableName: 'media_data',
+      resourceUrl: 'videos/',
+      mediaPrefix: 'vd-',
+      mediaIdLength: 2,
+      mediaIdMin: 1,
+      mediaIdMax: 5,
+      mediaExt: '.mp4',
+      mediaType: 'video'
     }
   ];
   /* ---------- CHANNEL_CONFIGS配置模板与说明 ----------
@@ -756,6 +784,15 @@
   let fsTranslateY = 0;
   let fsDragging = false;
   let fsDragStart = { x: 0, y: 0 };
+  let currentFsMediaType = null; // 'img' | 'video' | 'audio'
+  let currentFsMediaEl = null;   // 当前活跃的全屏媒体元素
+  let currentFsId = null;        // 当前全屏的媒体 ID
+  let fsFillMode = storage.get('fsFillMode', 'horizontal'); // 'vertical' | 'horizontal'
+  let fsVideoOrigParent = null;  // video 原始父节点（用于全屏移回）
+  let fsVideoOrigId = null;      // video 原始卡片 ID
+  let playerUpdateTimer = null;  // 播放进度更新定时器
+  let playerControlsTimer = null;  // 控件自动隐藏计时器
+  let playerControlsVisible = false; // 控件当前可见状态
 
   /* ---------- DOM 缓存 ---------- */
   const $ = (sel) => document.querySelector(sel);
@@ -788,6 +825,18 @@
     fullscreenModal: $('#fullscreenModal'),
     fullscreenClose: $('#fullscreenClose'),
     fullscreenMedia: $('#fullscreenMedia'),
+    fullscreenAudio: $('#fullscreenAudio'),
+    zoomControls: $('#zoomControls'),
+    playerFill: $('#playerFill'),
+    playerControls: $('#playerControls'),
+    playerPlayPause: $('#playerPlayPause'),
+    playerProgressWrap: $('#playerProgressWrap'),
+    playerProgress: $('#playerProgress'),
+    playerBuffered: $('#playerBuffered'),
+    playerTime: $('#playerTime'),
+    playerMute: $('#playerMute'),
+    playerVolume: $('#playerVolume'),
+    playerSpeed: $('#playerSpeed'),
     zoomIn: $('#zoomIn'),
     zoomOut: $('#zoomOut'),
     zoomReset: $('#zoomReset'),
@@ -1308,7 +1357,7 @@
   });
 
   class MediaCard {
-    #id; #el; #mediaWrap; #mediaEl; #observer;
+    #id; #el; #mediaWrap; #mediaEl; #observer; #playOverlay; #playerBar;
     #btns = {};
     #cachedH = 0; #hReported = false; #hPlaceholder = false;
 
@@ -1348,6 +1397,9 @@
     // ── 只读属性 ──
     get id() { return this.#id; }
     get el() { return this.#el; }
+    get mediaEl() { return this.#mediaEl; }
+    get mediaWrap() { return this.#mediaWrap; }
+    get playOverlay() { return this.#playOverlay; }
     get height() { return this.#cachedH || this.#el.offsetHeight || 0; }
     get colIdx() { return parseInt(this.#el.dataset.colIdx); }
     set colIdx(v) { this.#el.dataset.colIdx = v; }
@@ -1416,9 +1468,9 @@
     #setupVideoAudio(type, id) {
       const el = document.createElement(type);
       el.className = 'card-media loaded';
-      el.controls = true;
       el.preload = 'metadata';
       el.playsInline = true;
+      el.controls = false;
       el.src = mediaPath(id);
       this.#mediaEl = el;
 
@@ -1426,6 +1478,9 @@
         this.#mediaWrap.classList.add('media-loaded');
         this.cacheHeight();
         recordCardHeight(this);
+        // 同步时间显示
+        const timeEl = this.#mediaWrap.querySelector('.card-ctrl-time');
+        if (timeEl) timeEl.textContent = '0:00 / ' + cardFormatTime(el.duration);
       });
       el.addEventListener('error', () => {
         this.#mediaWrap.classList.add('media-loaded');
@@ -1433,6 +1488,59 @@
         recordCardHeight(this);
         this.disable();
         dbg('卡片缓存', '媒体加载失败，禁用卡片功能', { id });
+      });
+
+      // ── 中心播放覆盖按钮 ──
+      const overlay = document.createElement('div');
+      overlay.className = 'card-play-overlay';
+      overlay.innerHTML = '&#9654;';
+      overlay.title = '播放';
+      this.#mediaWrap.appendChild(overlay);
+      this.#playOverlay = overlay;
+
+      // ── 底部控制栏 ──
+      const bar = document.createElement('div');
+      bar.className = 'card-player-bar';
+      bar.innerHTML =
+        '<button class="card-ctrl-play" title="播放">&#9654;</button>' +
+        '<div class="card-ctrl-progress-wrap"><div class="card-ctrl-buffered"></div><div class="card-ctrl-progress"></div></div>' +
+        '<span class="card-ctrl-time">0:00</span>' +
+        '<button class="card-ctrl-mute" title="静音">&#128266;</button>';
+      this.#mediaWrap.appendChild(bar);
+      this.#playerBar = bar;
+
+      // ── 播放/暂停/结束事件同步 UI ──
+      const self = this;
+      el.addEventListener('play', () => {
+        if (currentFsId) return;
+        overlay.style.display = 'none';
+        bar.classList.add('visible');
+        bar.querySelector('.card-ctrl-play').innerHTML = '&#10074;&#10074;';
+      });
+      el.addEventListener('pause', () => {
+        if (currentFsId) return;
+        if (!el.seeking) {
+          overlay.style.display = '';
+          bar.querySelector('.card-ctrl-play').innerHTML = '&#9654;';
+        }
+      });
+      el.addEventListener('ended', () => {
+        if (currentFsId) return;
+        overlay.style.display = '';
+        bar.classList.remove('visible');
+        bar.querySelector('.card-ctrl-play').innerHTML = '&#9654;';
+        bar.querySelector('.card-ctrl-progress').style.width = '0%';
+        bar.querySelector('.card-ctrl-time').textContent = '0:00 / ' + cardFormatTime(el.duration);
+      });
+      el.addEventListener('timeupdate', () => {
+        if (!el.duration) return;
+        bar.querySelector('.card-ctrl-progress').style.width = (el.currentTime / el.duration * 100) + '%';
+        bar.querySelector('.card-ctrl-time').textContent = cardFormatTime(el.currentTime) + ' / ' + cardFormatTime(el.duration);
+      });
+      el.addEventListener('progress', () => {
+        if (el.buffered.length > 0 && el.duration) {
+          bar.querySelector('.card-ctrl-buffered').style.width = (el.buffered.end(el.buffered.length - 1) / el.duration * 100) + '%';
+        }
       });
     }
 
@@ -1799,49 +1907,181 @@
      全屏查看
      ============================================================ */
 
-  const VIEW_COOLDOWN = 10000; // 浏览冷冻期（毫秒）
+  const VIEW_COOLDOWN_IMG = 30000;    // img 浏览冷冻期 30s（全屏打开算一次）
+  const VIEW_COOLDOWN_MEDIA = 60000;  // video/audio 浏览冷冻期 60s（从头播放算一次）
+
   function getViewCooldowns() { return storage.get(cfgKey('viewCooldowns'), {}); }
-  function setViewCooldown(id) {
+  function setViewCooldown(id, cooldown) {
     const cd = getViewCooldowns();
     const now = Date.now();
     // 清理过期条目，防止对象无限增长
     for (const k in cd) {
-      if (now - cd[k] >= VIEW_COOLDOWN) delete cd[k];
+      if (now - cd[k] >= VIEW_COOLDOWN_MEDIA) delete cd[k];
     }
     cd[id] = now;
     storage.set(cfgKey('viewCooldowns'), cd);
   }
-  function isViewCooldown(id) {
+  function isViewCooldown(id, cooldown) {
     const cd = getViewCooldowns();
-    return cd[id] && Date.now() - cd[id] < VIEW_COOLDOWN;
+    return cd[id] && Date.now() - cd[id] < cooldown;
+  }
+
+  function recordView(id) {
+    setViewCooldown(id);
+    apiPost('view', id);
+    const newCount = incrementCacheCount('hot', id);
+    updateCardCountDisplay(id, 'view', newCount);
   }
 
   function openFullscreen(id) {
-    dbg('用户操作', '全屏查看 id=' + id, { id, 冷冻期: isViewCooldown(id), 冷冻时长: VIEW_COOLDOWN / 1000 + 's', 计数: !isViewCooldown(id) });
-    if (!isViewCooldown(id)) {
-      setViewCooldown(id);
-      apiPost('view', id);
-      const newCount = incrementCacheCount('hot', id);
-      updateCardCountDisplay(id, 'view', newCount);
+    const mediaType = cfg().mediaType || 'img';
+    const cooldown = mediaType === 'img' ? VIEW_COOLDOWN_IMG : VIEW_COOLDOWN_MEDIA;
+    dbg('用户操作', '全屏查看 id=' + id, { id, 类型: mediaType, 冷冻期: isViewCooldown(id, cooldown), 冷冻时长: cooldown / 1000 + 's', 计数: mediaType === 'img' ? !isViewCooldown(id, cooldown) : '等待播放' });
+
+    // img：全屏即算浏览
+    if (mediaType === 'img' && !isViewCooldown(id, VIEW_COOLDOWN_IMG)) {
+      recordView(id);
     }
+
+    currentFsId = id;
+    const src = mediaPath(id);
+    currentFsMediaType = mediaType;
+
+    // 重置缩放/平移状态
     fsScale = 1;
     fsTranslateX = 0;
     fsTranslateY = 0;
-    dom.fullscreenMedia.src = mediaPath(id);
-    dom.fullscreenMedia.style.transform = '';
+
+    // 隐藏所有媒体元素
+    dom.fullscreenMedia.style.display = 'none';
+    dom.fullscreenMedia.src = '';
+    dom.fullscreenAudio.style.display = 'none';
+    dom.fullscreenAudio.src = '';
+    // 移除全屏中残留的 video（如果上次未正常关闭）
+    const wrap = dom.fullscreenMedia.parentNode;
+    const leftoverVideo = wrap.querySelector('video');
+    if (leftoverVideo && leftoverVideo !== currentFsMediaEl) {
+      leftoverVideo.remove();
+    }
+
+    // 隐藏播放器控件和缩放控件
+    dom.playerControls.classList.remove('visible');
+    playerControlsVisible = false;
+    dom.fullscreenClose.style.display = '';
+    dom.zoomControls.style.display = '';
+
+    if (mediaType === 'video') {
+      // 从卡片中获取原始 video 元素，移到全屏模态框
+      const instance = cardInstances.get(id);
+      if (instance && instance.mediaEl && instance.mediaEl.tagName === 'VIDEO') {
+        const videoEl = instance.mediaEl;
+        fsVideoOrigParent = videoEl.parentNode;
+        fsVideoOrigId = id;
+
+        // 暂停并隐藏播放覆盖
+        if (instance.playOverlay) instance.playOverlay.style.display = 'none';
+
+        // 移动到全屏
+        dom.fullscreenMedia.parentNode.appendChild(videoEl);
+        videoEl.style.display = '';
+        videoEl.style.removeProperty('transform');
+        videoEl.style.removeProperty('width');
+        videoEl.style.removeProperty('height');
+        videoEl.style.removeProperty('max-width');
+        videoEl.style.removeProperty('max-height');
+        videoEl.style.removeProperty('object-fit');
+        videoEl.controls = false;
+        currentFsMediaEl = videoEl;
+
+        playerShowControls();
+        playerStartAutoHide();
+        dom.zoomControls.style.display = 'none';
+        if (videoEl.readyState >= 1) {
+          applyFsFillMode();
+        } else {
+          videoEl.addEventListener('loadedmetadata', () => applyFsFillMode(), { once: true });
+        }
+        playerInit(videoEl);
+        if (videoEl.paused) videoEl.play().catch(() => {});
+      }
+    } else if (mediaType === 'audio') {
+      // audio 无视觉元素，使用全屏独立元素
+      dom.fullscreenAudio.style.display = '';
+      dom.fullscreenAudio.src = src;
+      currentFsMediaEl = dom.fullscreenAudio;
+      playerShowControls();
+      playerStartAutoHide();
+      dom.zoomControls.style.display = 'none';
+      playerInit(dom.fullscreenAudio);
+    } else {
+      dom.fullscreenMedia.style.display = '';
+      dom.fullscreenMedia.src = src;
+      dom.fullscreenMedia.style.transform = '';
+      currentFsMediaEl = null;
+    }
+
     dom.fullscreenModal.classList.add('open');
+    if (mediaType === 'video') dom.fullscreenModal.classList.add('video-mode');
     document.body.style.overflow = 'hidden';
   }
 
   function closeFullscreen() {
-    dbg('用户操作', '关闭全屏', { src: dom.fullscreenMedia.src });
+    dbg('用户操作', '关闭全屏', { type: currentFsMediaType });
+
+    // 停止播放器事件和自动隐藏
+    if (currentFsMediaType === 'video' || currentFsMediaType === 'audio') {
+      playerStop();
+    }
+    playerStopAutoHide();
+
+    // video：移回原卡片
+    if (currentFsMediaType === 'video' && currentFsMediaEl && fsVideoOrigParent) {
+      const videoEl = currentFsMediaEl;
+      videoEl.pause();
+      videoEl.controls = false;
+      videoEl.style.removeProperty('width');
+      videoEl.style.removeProperty('height');
+      videoEl.style.removeProperty('max-width');
+      videoEl.style.removeProperty('max-height');
+      videoEl.style.removeProperty('object-fit');
+      videoEl.style.removeProperty('transform');
+      videoEl.style.removeProperty('top');
+      videoEl.style.removeProperty('left');
+
+      // 移回原始父节点
+      fsVideoOrigParent.appendChild(videoEl);
+
+      // 恢复播放覆盖按钮
+      const instance = cardInstances.get(fsVideoOrigId);
+      if (instance && instance.playOverlay) {
+        instance.playOverlay.style.display = '';
+        instance.playOverlay.innerHTML = '&#9654;';
+      }
+    }
+
+    // audio：清空独立元素
+    if (currentFsMediaType === 'audio' && currentFsMediaEl) {
+      currentFsMediaEl.pause();
+      currentFsMediaEl.src = '';
+    }
+
     dom.fullscreenModal.classList.remove('open');
     document.body.style.overflow = '';
     dom.fullscreenMedia.src = '';
+    dom.fullscreenAudio.src = '';
+    dom.playerControls.classList.remove('visible');
+    dom.fullscreenClose.style.display = '';
+    dom.zoomControls.style.display = '';
+
     fsDragging = false;
     fsScale = 1;
     fsTranslateX = 0;
     fsTranslateY = 0;
+    currentFsMediaType = null;
+    currentFsMediaEl = null;
+    currentFsId = null;
+    fsVideoOrigParent = null;
+    fsVideoOrigId = null;
   }
 
   function applyFsTransform() {
@@ -1863,6 +2103,317 @@
     fsTranslateX = 0;
     fsTranslateY = 0;
     applyFsTransform();
+  }
+
+  /**
+   * 全屏视频填充模式
+   * 横向填充：video宽度 = 屏幕宽度，高度按比例自适应
+   * 纵向填充：video高度 = 屏幕高度，宽度按比例自适应
+   *
+   * @param {string} [mode] - 'horizontal' | 'vertical'，不传则自动推断（带缓存）
+   */
+  let fsFillCache = {};  // 缓存：videoId → { 'vw×vh': 'horizontal'|'vertical' }
+
+  function applyFsFillMode(mode) {
+    const video = dom.fullscreenMedia.parentNode.querySelector('video');
+    if (!video) return;
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cacheKey = vw + '×' + vh;
+
+    if (mode) {
+      fsFillMode = mode;
+    } else if (video.videoWidth && video.videoHeight) {
+      const videoCache = fsFillCache[currentFsId];
+      if (videoCache && videoCache[cacheKey]) {
+        fsFillMode = videoCache[cacheKey];
+      } else {
+        const videoAR = video.videoWidth / video.videoHeight;
+        const hIfHorizontal = vw / videoAR;
+        const wIfVertical = vh * videoAR;
+        const horizontalCovers = hIfHorizontal >= vh;
+        const verticalCovers = wIfVertical >= vw;
+        if (horizontalCovers && !verticalCovers) {
+          fsFillMode = 'horizontal';
+        } else if (verticalCovers && !horizontalCovers) {
+          fsFillMode = 'vertical';
+        } else {
+          fsFillMode = hIfHorizontal - vh <= wIfVertical - vw ? 'horizontal' : 'vertical';
+        }
+        if (!fsFillCache[currentFsId]) fsFillCache[currentFsId] = {};
+        fsFillCache[currentFsId][cacheKey] = fsFillMode;
+      }
+    }
+    storage.set('fsFillMode', fsFillMode);
+
+    if (video.videoWidth && video.videoHeight) {
+      const videoAR = video.videoWidth / video.videoHeight;
+      let w, h;
+      if (fsFillMode === 'horizontal') {
+        w = vw;
+        h = Math.round(vw / videoAR);
+      } else {
+        h = vh;
+        w = Math.round(vh * videoAR);
+      }
+      video.style.width = w + 'px';
+      video.style.height = h + 'px';
+      video.style.left = Math.round((vw - w) / 2) + 'px';
+      video.style.top = Math.round((vh - h) / 2) + 'px';
+      video.style.objectFit = 'contain';
+    } else {
+      video.style.width = '100%';
+      video.style.height = '100vh';
+      video.style.left = '0';
+      video.style.top = '0';
+      video.style.objectFit = 'contain';
+    }
+
+    video.style.transform = 'none';
+    video.style.maxWidth = 'none';
+    video.style.maxHeight = 'none';
+
+    dom.playerFill.innerHTML = fsFillMode === 'horizontal' ? '&#8596;' : '&#8597;';
+    dom.playerFill.title = fsFillMode === 'horizontal' ? '横向填充（点击切换）' : '纵向填充（点击切换）';
+
+    dbg('布局变化', 'applyFsFillMode', {
+      mode: fsFillMode,
+      video: video.videoWidth + '×' + video.videoHeight,
+      screen: vw + '×' + vh,
+      applied: video.style.width + '×' + video.style.height,
+      position: video.style.left + ', ' + video.style.top
+    });
+  }
+
+  /* ============================================================
+     自定义播放器控制
+     ============================================================ */
+
+  function playerFormatTime(seconds) {
+    if (isNaN(seconds) || seconds < 0) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  // 卡片内播放器时间格式化（与 playerFormatTime 相同，独立命名避免冲突）
+  function cardFormatTime(seconds) {
+    if (isNaN(seconds) || seconds < 0) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  function playerInit(mediaEl) {
+    // 同步控件状态到媒体当前状态
+    const isPlaying = !mediaEl.paused;
+    dom.playerPlayPause.innerHTML = isPlaying ? '&#10074;&#10074;' : '&#9654;';
+    dom.playerPlayPause.classList.toggle('playing', isPlaying);
+    dom.playerVolume.value = mediaEl.volume;
+    dom.playerSpeed.value = String(mediaEl.playbackRate || 1);
+
+    // 更新静音按钮图标
+    playerUpdateMuteIcon(mediaEl);
+
+    // 进度和时间：已加载则同步当前值，否则等 loadedmetadata
+    if (mediaEl.readyState >= 1) {
+      const dur = mediaEl.duration;
+      const cur = mediaEl.currentTime;
+      dom.playerProgress.style.width = dur > 0 ? (cur / dur * 100) + '%' : '0%';
+      dom.playerTime.textContent = playerFormatTime(cur) + ' / ' + playerFormatTime(dur);
+    } else {
+      dom.playerProgress.style.width = '0%';
+      dom.playerBuffered.style.width = '0%';
+      dom.playerTime.textContent = '0:00 / 0:00';
+      mediaEl.addEventListener('loadedmetadata', playerOnLoadedMetadata, { once: true });
+    }
+
+    // 媒体事件
+    mediaEl.addEventListener('timeupdate', playerOnTimeUpdate);
+    mediaEl.addEventListener('progress', playerOnProgress);
+    mediaEl.addEventListener('play', playerOnPlay);
+    mediaEl.addEventListener('pause', playerOnPause);
+    mediaEl.addEventListener('ended', playerOnEnded);
+    mediaEl.addEventListener('volumechange', () => playerUpdateMuteIcon(mediaEl));
+  }
+
+  function playerStop() {
+    if (playerUpdateTimer) {
+      clearInterval(playerUpdateTimer);
+      playerUpdateTimer = null;
+    }
+    if (currentFsMediaEl) {
+      currentFsMediaEl.removeEventListener('timeupdate', playerOnTimeUpdate);
+      currentFsMediaEl.removeEventListener('progress', playerOnProgress);
+      currentFsMediaEl.removeEventListener('play', playerOnPlay);
+      currentFsMediaEl.removeEventListener('pause', playerOnPause);
+      currentFsMediaEl.removeEventListener('ended', playerOnEnded);
+    }
+  }
+
+  function playerOnLoadedMetadata() {
+    if (!currentFsMediaEl) return;
+    const dur = currentFsMediaEl.duration;
+    dom.playerTime.textContent = '0:00 / ' + playerFormatTime(dur);
+  }
+
+  function playerOnTimeUpdate() {
+    if (!currentFsMediaEl) return;
+    const cur = currentFsMediaEl.currentTime;
+    const dur = currentFsMediaEl.duration;
+    if (dur > 0) {
+      dom.playerProgress.style.width = (cur / dur * 100) + '%';
+      dom.playerTime.textContent = playerFormatTime(cur) + ' / ' + playerFormatTime(dur);
+    }
+  }
+
+  function playerOnProgress() {
+    if (!currentFsMediaEl) return;
+    const buffered = currentFsMediaEl.buffered;
+    const dur = currentFsMediaEl.duration;
+    if (buffered.length > 0 && dur > 0) {
+      const end = buffered.end(buffered.length - 1);
+      dom.playerBuffered.style.width = (end / dur * 100) + '%';
+    }
+  }
+
+  function playerOnPlay() {
+    dom.playerPlayPause.innerHTML = '&#10074;&#10074;';
+    dom.playerPlayPause.classList.add('playing');
+    playerShowAndScheduleHide();
+
+    // video/audio：从头播放算一次浏览
+    if (currentFsId && currentFsMediaEl && currentFsMediaEl.currentTime < 1) {
+      if (!isViewCooldown(currentFsId, VIEW_COOLDOWN_MEDIA)) {
+        dbg('用户操作', '从头播放 → 记录浏览 id=' + currentFsId, { id: currentFsId, currentTime: currentFsMediaEl.currentTime });
+        recordView(currentFsId);
+      }
+    }
+  }
+
+  function playerOnPause() {
+    dom.playerPlayPause.innerHTML = '&#9654;';
+    dom.playerPlayPause.classList.remove('playing');
+    playerClearTimer();
+    playerShowControls();
+  }
+
+  function playerOnEnded() {
+    dom.playerPlayPause.innerHTML = '&#9654;';
+    dom.playerPlayPause.classList.remove('playing');
+    playerClearTimer();
+    playerShowControls();
+  }
+
+  function playerTogglePlayPause() {
+    if (!currentFsMediaEl) return;
+    if (currentFsMediaEl.paused) {
+      currentFsMediaEl.play().catch(() => {});
+    } else {
+      currentFsMediaEl.pause();
+    }
+  }
+
+  function playerSeek(e) {
+    if (!currentFsMediaEl || !currentFsMediaEl.duration) return;
+    const rect = dom.playerProgressWrap.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    currentFsMediaEl.currentTime = ratio * currentFsMediaEl.duration;
+    // 实时同步进度条视觉和时间显示（不等待 timeupdate）
+    dom.playerProgress.style.width = (ratio * 100) + '%';
+    dom.playerTime.textContent = playerFormatTime(currentFsMediaEl.currentTime) + ' / ' + playerFormatTime(currentFsMediaEl.duration);
+  }
+
+  function playerToggleMute() {
+    if (!currentFsMediaEl) return;
+    currentFsMediaEl.muted = !currentFsMediaEl.muted;
+  }
+
+  function playerUpdateMuteIcon(mediaEl) {
+    if (mediaEl.muted || mediaEl.volume === 0) {
+      dom.playerMute.innerHTML = '&#128263;';
+    } else if (mediaEl.volume < 0.5) {
+      dom.playerMute.innerHTML = '&#128265;';
+    } else {
+      dom.playerMute.innerHTML = '&#128266;';
+    }
+  }
+
+  function playerSetVolume(val) {
+    if (!currentFsMediaEl) return;
+    currentFsMediaEl.volume = val;
+    currentFsMediaEl.muted = (val === 0);
+  }
+
+  function playerSetSpeed(val) {
+    if (!currentFsMediaEl) return;
+    currentFsMediaEl.playbackRate = val;
+  }
+
+  /* ---------- 控件自动隐藏 ----------
+   * 逻辑：
+   *   1. 控件展开后，鼠标离开 playerControls 区域时开始计时
+   *   2. 鼠标悬浮于 playerControls 上时不计时（控件保持可见）
+   *   3. 计时中鼠标重新进入 → 取消计时，等待再次离开
+   *   4. 点击 playerControls 之外的区域 → 立即收起并取消计时
+   * -------------------------------------------------------------- */
+  const PLAYER_HIDE_DELAY = 3000;
+  let playerMouseOverControls = false; // 鼠标是否在 playerControls 上
+
+  function playerShowControls() {
+    dom.playerControls.classList.add('visible');
+    dom.fullscreenClose.style.display = '';
+    playerControlsVisible = true;
+  }
+
+  function playerHideControls() {
+    if (!currentFsMediaEl || currentFsMediaEl.paused) return;
+    dom.playerControls.classList.remove('visible');
+    dom.fullscreenClose.style.display = 'none';
+    playerControlsVisible = false;
+  }
+
+  function playerClearTimer() {
+    if (playerControlsTimer) { clearTimeout(playerControlsTimer); playerControlsTimer = null; }
+  }
+
+  function playerStartHideTimer() {
+    playerClearTimer();
+    if (currentFsMediaEl && !currentFsMediaEl.paused && !playerMouseOverControls) {
+      playerControlsTimer = setTimeout(playerHideControls, PLAYER_HIDE_DELAY);
+    }
+  }
+
+  function playerShowAndScheduleHide() {
+    playerShowControls();
+    playerStartHideTimer();
+  }
+
+  function playerOnMouseEnterControls() {
+    playerMouseOverControls = true;
+    playerClearTimer();
+  }
+
+  function playerOnMouseLeaveControls() {
+    playerMouseOverControls = false;
+    playerStartHideTimer();
+  }
+
+  function playerOnClickOutside() {
+    playerClearTimer();
+    playerHideControls();
+  }
+
+  function playerStartAutoHide() {
+    playerMouseOverControls = false;
+    playerShowAndScheduleHide();
+  }
+
+  function playerStopAutoHide() {
+    playerClearTimer();
+    playerMouseOverControls = false;
+    playerControlsVisible = false;
   }
 
   /* ============================================================
@@ -3133,24 +3684,26 @@
       }
     });
 
-    // 点击背景关闭
+    // 点击背景关闭（仅图片模式）
     dom.fullscreenModal.addEventListener('click', (e) => {
+      if (currentFsMediaType !== 'img') return;
       if (e.target === dom.fullscreenModal || e.target.classList.contains('fullscreen-media-wrap')) {
         closeFullscreen();
       }
     });
 
-    // 滚轮缩放
+    // 滚轮缩放（仅图片模式）
     dom.fullscreenModal.addEventListener('wheel', (e) => {
       if (!dom.fullscreenModal.classList.contains('open')) return;
+      if (currentFsMediaType !== 'img') return;
       e.preventDefault();
       if (e.deltaY < 0) zoomIn();
       else zoomOut();
     }, { passive: false });
 
-    // 全屏内拖拽平移
+    // 全屏内拖拽平移（仅图片模式）
     dom.fullscreenMedia.addEventListener('mousedown', (e) => {
-      if (fsScale <= 1) return;
+      if (currentFsMediaType !== 'img' || fsScale <= 1) return;
       fsDragging = true;
       fsDragStart = { x: e.clientX - fsTranslateX, y: e.clientY - fsTranslateY };
       dom.fullscreenMedia.classList.add('grabbing');
@@ -3169,9 +3722,10 @@
       dom.fullscreenMedia.classList.remove('grabbing');
     });
 
-    // 触摸缩放（双指）
+    // 触摸缩放（双指，仅图片模式）
     let lastTouchDist = 0;
     dom.fullscreenModal.addEventListener('touchstart', (e) => {
+      if (currentFsMediaType !== 'img') return;
       if (e.touches.length === 2) {
         lastTouchDist = Math.hypot(
           e.touches[0].clientX - e.touches[1].clientX,
@@ -3181,6 +3735,7 @@
     }, { passive: true });
 
     dom.fullscreenModal.addEventListener('touchmove', (e) => {
+      if (currentFsMediaType !== 'img') return;
       if (e.touches.length === 2) {
         e.preventDefault();
         const dist = Math.hypot(
@@ -3195,6 +3750,268 @@
         lastTouchDist = dist;
       }
     }, { passive: false });
+
+    // ── 播放器控件事件 ──
+
+    // 播放/暂停
+    dom.playerPlayPause.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playerTogglePlayPause();
+    });
+
+    // ── 卡片内自定义播放控件（事件委托）──
+
+    // 中心播放覆盖 → 播放
+    dom.gridContainer.addEventListener('click', (e) => {
+      const overlay = e.target.closest('.card-play-overlay');
+      if (!overlay) return;
+      e.stopPropagation();
+      const card = overlay.closest('.media-card');
+      if (!card) return;
+      const id = Number(card.dataset.id);
+      const instance = cardInstances.get(id);
+      if (!instance || !instance.mediaEl) return;
+      instance.mediaEl.play().catch(() => {});
+    });
+
+    // 卡片控制栏播放/暂停按钮
+    dom.gridContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.card-ctrl-play');
+      if (!btn) return;
+      e.stopPropagation();
+      const card = btn.closest('.media-card');
+      if (!card) return;
+      const instance = cardInstances.get(Number(card.dataset.id));
+      if (!instance || !instance.mediaEl) return;
+      const m = instance.mediaEl;
+      m.paused ? m.play().catch(() => {}) : m.pause();
+    });
+
+    // 卡片控制栏静音按钮
+    dom.gridContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.card-ctrl-mute');
+      if (!btn) return;
+      e.stopPropagation();
+      const card = btn.closest('.media-card');
+      if (!card) return;
+      const instance = cardInstances.get(Number(card.dataset.id));
+      if (!instance || !instance.mediaEl) return;
+      instance.mediaEl.muted = !instance.mediaEl.muted;
+      btn.innerHTML = instance.mediaEl.muted ? '&#128263;' : '&#128266;';
+    });
+
+    // 卡片控制栏滚轮调节音量
+    dom.gridContainer.addEventListener('wheel', (e) => {
+      const bar = e.target.closest('.card-player-bar');
+      if (!bar) return;
+      e.preventDefault();
+      const card = bar.closest('.media-card');
+      if (!card) return;
+      const instance = cardInstances.get(Number(card.dataset.id));
+      if (!instance || !instance.mediaEl) return;
+      const m = instance.mediaEl;
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      m.volume = Math.max(0, Math.min(1, m.volume + delta));
+      m.muted = m.volume === 0;
+      const muteBtn = bar.querySelector('.card-ctrl-mute');
+      if (muteBtn) muteBtn.innerHTML = (m.muted || m.volume === 0) ? '&#128263;' : (m.volume < 0.5 ? '&#128265;' : '&#128266;');
+    }, { passive: false });
+
+    // 卡片进度条点击跳转
+    dom.gridContainer.addEventListener('click', (e) => {
+      const wrap = e.target.closest('.card-ctrl-progress-wrap');
+      if (!wrap) return;
+      e.stopPropagation();
+      const card = wrap.closest('.media-card');
+      if (!card) return;
+      const instance = cardInstances.get(Number(card.dataset.id));
+      if (!instance || !instance.mediaEl || !instance.mediaEl.duration) return;
+      const rect = wrap.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      instance.mediaEl.currentTime = ratio * instance.mediaEl.duration;
+    });
+
+    // 卡片进度条拖拽
+    let cardProgressDragging = null;
+    dom.gridContainer.addEventListener('mousedown', (e) => {
+      const wrap = e.target.closest('.card-ctrl-progress-wrap');
+      if (!wrap) return;
+      e.preventDefault();
+      const card = wrap.closest('.media-card');
+      if (!card) return;
+      const instance = cardInstances.get(Number(card.dataset.id));
+      if (!instance || !instance.mediaEl || !instance.mediaEl.duration) return;
+      cardProgressDragging = { el: instance.mediaEl, wrap };
+      const rect = wrap.getBoundingClientRect();
+      cardProgressDragging.el.currentTime = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * cardProgressDragging.el.duration;
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!cardProgressDragging) return;
+      const rect = cardProgressDragging.wrap.getBoundingClientRect();
+      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      cardProgressDragging.el.currentTime = ratio * cardProgressDragging.el.duration;
+    });
+    document.addEventListener('mouseup', () => { cardProgressDragging = null; });
+
+    // 卡片内 video 点击（非控件区域）→ 切换播放/暂停
+    dom.gridContainer.addEventListener('click', (e) => {
+      const video = e.target.closest('.card-media-wrap video');
+      if (!video) return;
+      // 排除控件点击
+      if (e.target.closest('.card-player-bar') || e.target.closest('.card-play-overlay')) return;
+      e.stopPropagation();
+      const card = video.closest('.media-card');
+      if (!card) return;
+      const instance = cardInstances.get(Number(card.dataset.id));
+      if (!instance) return;
+      video.paused ? video.play().catch(() => {}) : video.pause();
+    });
+
+    // 进度条点击跳转
+    dom.playerProgressWrap.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playerSeek(e);
+    });
+
+    // 进度条拖拽
+    let progressDragging = false;
+    dom.playerProgressWrap.addEventListener('mousedown', (e) => {
+      progressDragging = true;
+      playerSeek(e);
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (progressDragging) playerSeek(e);
+    });
+    document.addEventListener('mouseup', () => {
+      progressDragging = false;
+    });
+
+    // 静音
+    dom.playerMute.addEventListener('click', (e) => {
+      e.stopPropagation();
+      playerToggleMute();
+    });
+
+    // 音量
+    dom.playerVolume.addEventListener('input', (e) => {
+      e.stopPropagation();
+      playerSetVolume(parseFloat(e.target.value));
+    });
+
+    // 音量区域滚轮调节
+    dom.playerVolume.parentNode.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const newVol = Math.max(0, Math.min(1, parseFloat(dom.playerVolume.value) + delta));
+      dom.playerVolume.value = newVol;
+      playerSetVolume(newVol);
+    }, { passive: false });
+
+    // 播放速度
+    dom.playerSpeed.addEventListener('change', (e) => {
+      e.stopPropagation();
+      playerSetSpeed(parseFloat(e.target.value));
+    });
+
+    // 空格键播放/暂停（仅全屏打开时）
+    document.addEventListener('keydown', (e) => {
+      if (!dom.fullscreenModal.classList.contains('open')) return;
+      if (currentFsMediaType !== 'video' && currentFsMediaType !== 'audio') return;
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        playerTogglePlayPause();
+      }
+    });
+
+    // 点击播放器控件区域阻止冒泡（不触发 modal 点击）
+    dom.playerControls.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    // 铺满模式切换（cycle）
+    dom.playerFill.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const newMode = fsFillMode === 'horizontal' ? 'vertical' : 'horizontal';
+      dbg('用户操作', '手动切换填充模式', { from: fsFillMode, to: newMode });
+      applyFsFillMode(newMode);
+      playerShowAndScheduleHide();
+    });
+
+    // 鼠标进入控件区域 → 取消计时
+    dom.playerControls.addEventListener('mouseenter', () => {
+      if (currentFsMediaType === 'video' || currentFsMediaType === 'audio') {
+        playerOnMouseEnterControls();
+      }
+    });
+
+    // 鼠标离开控件区域 → 开始计时
+    dom.playerControls.addEventListener('mouseleave', () => {
+      if (currentFsMediaType === 'video' || currentFsMediaType === 'audio') {
+        playerOnMouseLeaveControls();
+      }
+    });
+
+    // 全屏视频：单击切换控件显隐，双击切换播放/暂停
+    let fsClickTimer = null;
+    dom.fullscreenModal.addEventListener('click', (e) => {
+      if (currentFsMediaType === 'video') {
+        if (e.target !== currentFsMediaEl && !e.target.classList.contains('fullscreen-media-wrap') && e.target !== dom.fullscreenModal) return;
+        if (fsClickTimer) {
+          clearTimeout(fsClickTimer);
+          fsClickTimer = null;
+          playerTogglePlayPause();
+        } else {
+          fsClickTimer = setTimeout(() => {
+            fsClickTimer = null;
+            if (playerControlsVisible) {
+              playerOnClickOutside();
+            } else {
+              playerShowAndScheduleHide();
+            }
+          }, 280);
+        }
+      } else if (currentFsMediaType === 'img') {
+        if (e.target === dom.fullscreenModal || e.target.classList.contains('fullscreen-media-wrap')) {
+          closeFullscreen();
+        }
+      }
+    });
+
+    // 触摸 → 显示控件并开始计时（移动端）
+    dom.fullscreenModal.addEventListener('touchstart', () => {
+      if (currentFsMediaType === 'video' || currentFsMediaType === 'audio') {
+        playerShowAndScheduleHide();
+      }
+    }, { passive: true });
+
+    // 鼠标移入底部区域 → 展开控件栏（控件隐藏时）
+    dom.fullscreenModal.addEventListener('mousemove', (e) => {
+      if (currentFsMediaType !== 'video' && currentFsMediaType !== 'audio') return;
+      if (!playerControlsVisible && e.clientY > window.innerHeight - 80) {
+        playerShowAndScheduleHide();
+      }
+    }, { passive: true });
+
+    // 窗口尺寸变化 → 保持当前模式，用新尺寸重新计算（F11过渡期间跳过）
+    let fs11Lock = false;
+    window.addEventListener('resize', () => {
+      if (fs11Lock) return;
+      if (dom.fullscreenModal.classList.contains('open') && currentFsMediaType === 'video') {
+        applyFsFillMode(fsFillMode);
+      }
+    });
+
+    // F11 浏览器全屏切换 → 锁定resize，等浏览器完成布局后用新尺寸自动推断
+    document.addEventListener('fullscreenchange', () => {
+      if (!dom.fullscreenModal.classList.contains('open') || currentFsMediaType !== 'video') return;
+      fs11Lock = true;
+      setTimeout(() => {
+        fs11Lock = false;
+        applyFsFillMode();
+      }, 300);
+    });
   }
 
   /* ============================================================
@@ -3315,6 +4132,7 @@
         if (newIndex === channelIndex) return;
         dbg('用户操作', '频道切换', { from: CHANNEL_CONFIGS[channelIndex].name, to: CHANNEL_CONFIGS[newIndex].name, reload: true });
         storage.set('channelIndex', newIndex);
+        storage.set('currentTab', 'home');
         location.reload();
       },
       onOpen: () => {

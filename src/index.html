@@ -93,13 +93,35 @@
   <!-- 全屏查看模态框 -->
   <div id="fullscreenModal" class="fullscreen-modal">
     <button id="fullscreenClose" class="fullscreen-close" title="关闭">&times;</button>
-    <div class="fullscreen-controls">
+    <div id="zoomControls" class="fullscreen-controls">
       <button id="zoomIn" class="fs-ctrl-btn" title="放大">+</button>
       <button id="zoomOut" class="fs-ctrl-btn" title="缩小">&minus;</button>
       <button id="zoomReset" class="fs-ctrl-btn" title="重置">1:1</button>
     </div>
     <div class="fullscreen-media-wrap">
       <img id="fullscreenMedia" class="fullscreen-media" src="" alt="">
+      <audio id="fullscreenAudio" class="fullscreen-media fullscreen-audio" src="" preload="metadata"></audio>
+    </div>
+    <div id="playerControls" class="player-controls">
+      <button id="playerPlayPause" class="player-btn player-play-btn" title="播放/暂停">&#9654;</button>
+      <div id="playerProgressWrap" class="player-progress-wrap">
+        <div id="playerBuffered" class="player-buffered"></div>
+        <div id="playerProgress" class="player-progress"></div>
+      </div>
+      <span id="playerTime" class="player-time">0:00 / 0:00</span>
+      <div class="player-volume-wrap">
+        <button id="playerMute" class="player-btn player-mute-btn" title="静音">&#128266;</button>
+        <input id="playerVolume" type="range" class="player-volume" min="0" max="1" step="0.05" value="1">
+      </div>
+      <select id="playerSpeed" class="player-speed" title="播放速度">
+        <option value="0.5">0.5x</option>
+        <option value="0.8">0.8x</option>
+        <option value="1" selected>1x</option>
+        <option value="1.5">1.5x</option>
+        <option value="2">2x</option>
+        <option value="3">3x</option>
+      </select>
+      <button id="playerFill" class="player-btn player-fill-btn" title="填充模式">&#8596;</button>
     </div>
   </div>
 

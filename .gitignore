@@ -1,5 +1,7 @@
 images/
 videos/
+audios/
+src/api/sqlitedb/
 
 .vscode/
 .idea/

@@ -401,7 +401,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 14px;
+  padding: 4px 8px;
   color: var(--text-primary);
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
@@ -437,7 +437,7 @@ img {
 }
 
 .custom-select-option {
-  padding: 10px 14px;
+  padding: 6px 10px;
   color: var(--text-primary);
   white-space: nowrap;
   text-align: center;
@@ -913,6 +913,192 @@ img {
   filter: grayscale(0.9);
 }
 
+.media-card.card-disabled .card-play-overlay {
+  display: none;
+}
+
+/* 卡片内视频播放覆盖按钮 */
+.card-play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 3;
+  transition: all var(--transition-fast);
+  pointer-events: auto;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.card-play-overlay:hover {
+  background: rgba(0, 0, 0, 0.65);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* audio 也用覆盖按钮（居中偏上） */
+.media-card audio.card-media ~ .card-play-overlay {
+  top: 40%;
+}
+
+.media-card video.card-media,
+.media-card audio.card-media {
+  cursor: pointer;
+}
+
+/* 卡片内自定义播放控制栏 */
+.card-player-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  pointer-events: none;
+}
+
+.card-media-wrap:hover .card-player-bar,
+.card-player-bar.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 播放/暂停 */
+.card-ctrl-play {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.card-ctrl-play:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* 进度条 */
+.card-ctrl-progress-wrap {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: height var(--transition-fast);
+}
+
+.card-ctrl-progress-wrap:hover {
+  height: 6px;
+}
+
+.card-ctrl-buffered {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  width: 0;
+  pointer-events: none;
+}
+
+.card-ctrl-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 时间 */
+.card-ctrl-time {
+  font-size: 11px;
+  font-family: var(--font-display);
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  min-width: 55px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* 静音 */
+.card-ctrl-mute {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.card-ctrl-mute:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .card-play-overlay {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .card-player-bar {
+    gap: 4px;
+    padding: 4px 6px;
+  }
+
+  .card-ctrl-time {
+    font-size: 10px;
+    min-width: 45px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-ctrl-mute {
+    display: none;
+  }
+
+  .card-ctrl-time {
+    min-width: 40px;
+  }
+}
+
 /* 敏感页已屏蔽卡片 */
 .media-card.card-blocked .card-media-wrap::after {
   content: '';
@@ -1143,24 +1329,26 @@ img {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(0, 0, 0, 0.97);
+  background: rgba(0, 0, 0, 0.06);
   display: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
 .fullscreen-modal.open {
   display: flex;
 }
 
+.fullscreen-modal.video-mode {
+  background: #000;
+}
+
 .fullscreen-close {
   position: absolute;
   top: 16px;
   right: 20px;
-  z-index: 1001;
+  z-index: 1003;
   width: 44px;
   height: 44px;
   display: flex;
@@ -1174,7 +1362,7 @@ img {
 
 .fullscreen-close:hover {
   color: #fff;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.5);
 }
 
 .fullscreen-controls {
@@ -1185,6 +1373,7 @@ img {
   display: flex;
   gap: 6px;
 }
+
 
 .fs-ctrl-btn {
   width: 40px;
@@ -1213,6 +1402,7 @@ img {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  position: relative;
 }
 
 .fullscreen-media {
@@ -1225,6 +1415,261 @@ img {
 
 .fullscreen-media.grabbing {
   cursor: grabbing;
+}
+
+/* 隐藏 audio 默认控件 */
+.fullscreen-audio::-webkit-media-controls {
+  display: none !important;
+}
+.fullscreen-audio {
+  -webkit-media-controls: none;
+  display: none;
+}
+
+/* 全屏模态框中的 video（从卡片移入的） */
+.fullscreen-media-wrap video {
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  position: absolute;
+  z-index: 1001;
+}
+
+/* ==========================================================
+   Custom Player Controls
+   ========================================================== */
+.player-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1002;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 13px;
+  font-family: var(--font-display);
+}
+
+.player-controls.visible {
+  display: flex;
+}
+
+/* 播放/暂停按钮 */
+.player-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  cursor: pointer;
+  border: none;
+}
+
+.player-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.player-play-btn.playing {
+  font-size: 14px;
+}
+
+/* 进度条 */
+.player-progress-wrap {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: height var(--transition-fast);
+}
+
+.player-progress-wrap:hover {
+  height: 10px;
+}
+
+.player-buffered {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  width: 0;
+  pointer-events: none;
+}
+
+.player-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  width: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 时间显示 */
+.player-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  min-width: 90px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* 音量控件 */
+.player-volume-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.player-mute-btn {
+  font-size: 14px;
+}
+
+.player-volume {
+  width: 70px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  transition: width var(--transition-fast);
+}
+
+.player-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.player-volume::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+/* 播放速度 */
+.player-speed {
+  width: auto;
+  min-width: 0;
+  padding: 2px 4px;
+  font-size: 12px;
+  font-family: var(--font-display);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+  text-align: center;
+  text-align-last: center;
+}
+
+.player-speed:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.player-speed option {
+  background: #1a1a1e;
+  color: #fff;
+  text-align: center;
+}
+
+/* 播放/暂停大按钮覆盖（视频中间） */
+.player-overlay-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.fullscreen-media-wrap:hover .player-overlay-play,
+.player-overlay-play.visible {
+  opacity: 1;
+}
+
+/* 响应式：移动端播放器 */
+@media (max-width: 768px) {
+  .player-controls {
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .player-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .player-time {
+    font-size: 11px;
+    min-width: 70px;
+  }
+
+  .player-volume {
+    width: 50px;
+  }
+
+  .player-speed {
+    font-size: 11px;
+    padding: 2px 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .player-volume-wrap {
+    display: none;
+  }
+
+  .player-time {
+    min-width: 60px;
+    font-size: 10px;
+  }
 }
 
 /* ==========================================================

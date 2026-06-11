@@ -20,8 +20,10 @@ A minimalist, lightweight online media browsing platform that anonymously helps 
 - **Adaptive grid layout**: 1-5 columns freely switchable, 12 card viewport ratio options (original, 16:9, 4:3, 1:1, etc.)
 - **Bookmark system**: Sidebar for adding/jumping/clearing bookmarks to quickly locate content
 - **Interaction stats**: Views, likes, favorites, downloads, shares, blocks — persisted to SQLite
-- **Lazy loading**: On-demand image and video loading with infinite scroll
+- **Lazy loading**: On-demand image, video, and audio loading with infinite scroll
 - **Fullscreen view**: Click media to enter fullscreen with zoom and 1:1 original size support
+- **Audio player**: Custom audio player with play/pause, progress bar, volume control, speed adjustment
+- **Video player**: Custom video player with playback controls, progress bar, volume, speed settings
 - **Theme switching**: Multiple built-in themes, one-click switch in settings panel
 - **Auto data refresh**: Configurable refresh interval (10/30/60 minutes), with manual immediate update
 - **Long-press dropdown menu**: Overflow navigation buttons auto-collapsed into a "More" dropdown control, long-press to expand
@@ -39,14 +41,17 @@ WebMedia-MicroChannel/
 │   ├── favicon.ico         # Site icon
 │   ├── api/
 │   │   ├── data.php        # Unified data API (GET/POST)
-│   │   └── db.php          # SQLite database initialization
-│   ├── images/             # Media resources (gitignored)
-│   └── videos/             # Video resources (gitignored)
+│   │   ├── db.php          # SQLite database initialization
+│   │   └── sqlitedb/       # SQLite database files
+│   ├── images/             # Image resources (gitignored)
+│   ├── videos/             # Video resources (gitignored)
+│   └── audios/             # Audio resources (gitignored)
 ├── scripts/
 │   ├── 图片人工审核.py       # Manual review tool
 │   ├── 批量自定义重命名.py   # Batch rename tool
 │   ├── 文件列表生成.py       # File list generator
-│   └── 文件列表同步.py       # File list sync
+│   ├── 文件列表同步.py       # File list sync
+│   └── image-judge-config.ini # Image review config
 └── dist/                   # Build output
 ```
 
