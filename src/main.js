@@ -22,6 +22,10 @@
   const PAGE_TITLE = '在线媒体微频道';  // 页面标题
   const DEBUG = true;                // 是否输出调试消息
 
+  // 首次访问引导
+  const ENABLE_FIRST_VISIT_GUIDE = true;
+  const GUIDE_ANNOUNCEMENT = '网站作品刚刚上线缺少活跃数据，大家给自己喜欢的图片点点赞吧';
+
   // 生成8位随机hex ID
   function genId() {
     return Math.random().toString(16).slice(2, 10);
@@ -39,7 +43,7 @@
           发现高危漏洞请请报告：<a href="mailto:JudeBlack@qq.com">JudeBlack@qq.com</a><br>\
           <b>操作教程：左上角按钮切换频道，探索页随机加载图片，推荐页及其后继页面按热门排序，长按最后一个按钮展开隐藏，左上角侧栏使用书签功能，右上角设置调整显示</b><br>\
           <font color="red"><b>*重要声明：媒体资源均来源于互联网，经过严格的人工审核，无不良引导，请注意甄别，非盈利性质，如侵权请联系删除<b></font><br>\
-          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-home-page&left_text=visitors"/>',
+          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-home-page&left_text=views"/>',
       iconSrc: '',
       useTheme: null,
       useColCount: null,
@@ -58,7 +62,7 @@
     },
     {
       id: 'aaaaaaa0',
-      name: '美女写真(托管源)',
+      name: '美女写真-OSS',
       nickname: 'CAIT-AI创意竞赛-WMMC团队参赛作品-在线媒体微频道',
       announcement: '本项目为CAIT组织的 “AI织页,视呈万象” 创意竞赛参赛作品<br>\
           开发与调试：<a href="https://github.com/JularDepick/">李文芳</a>、<a href="https://claude.com"><img src="https://img.shields.io/badge/Claude_Code-orange?style=flat&logo=claude&logoColor=white" title="Claude官网"/></a>、<a href="https://platform.xiaomimimo.com"><img src="https://img.shields.io/badge/XiaomiMiMo-grey?style=flat&logo=xiaomi&logoColor=white" title="XiaomiMiMo官网"/></a><br>\
@@ -67,7 +71,7 @@
           发现高危漏洞请请报告：<a href="mailto:JudeBlack@qq.com">JudeBlack@qq.com</a><br>\
           <b>操作教程：左上角按钮切换频道，探索页随机加载图片，推荐页及其后继页面按热门排序，长按最后一个按钮展开隐藏，左上角侧栏使用书签功能，右上角设置调整显示</b><br>\
           <font color="red"><b>*重要声明：媒体资源均来源于互联网，经过严格的人工审核，无不良引导，请注意甄别，非盈利性质，如侵权请联系删除<b></font><br>\
-          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-home-page&left_text=visitors"/>',
+          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-home-page&left_text=views"/>',
       iconSrc: '',
       useTheme: null,
       useColCount: null,
@@ -1336,12 +1340,6 @@
       this.#buildButtons(id, controlBar);
 
       card.append(mediaWrap, controlBar);
-
-      // 双击全屏
-      mediaWrap.addEventListener('dblclick', (e) => {
-        e.preventDefault();
-        openFullscreen(id);
-      });
 
       // 注册缓存
       cardInstances.set(id, this);
@@ -3355,6 +3353,9 @@
     dom.ratioSwitch.querySelectorAll('.ratio-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.ratio === ratio);
     });
+
+    // 重建列容器并重新分配卡片（init阶段跳过，列尚未创建）
+    if (!initializing) rebuildOriginalColumns();
   }
 
   function setupRatio() {
@@ -3509,7 +3510,15 @@
      初始化
      ============================================================ */
 
+  function checkFirstVisit() {
+    if (!ENABLE_FIRST_VISIT_GUIDE) return;
+    if (localStorage.getItem('visited') === 'true') return;
+    alert(GUIDE_ANNOUNCEMENT);
+    localStorage.setItem('visited', 'true');
+  }
+
   function init() {
+    checkFirstVisit();
     dbg('系统初化', 'init开始', { 协议: location.protocol, 频道: cfg().name, dbPath: cfg().dbPath || '', db: cfg().dbName, 类型: cfg().mediaType, 范围: cfg().mediaIdMin + '-' + cfg().mediaIdMax, 后端: cfg().backend });
     updatePageTitle();
     updatePageIcon();
