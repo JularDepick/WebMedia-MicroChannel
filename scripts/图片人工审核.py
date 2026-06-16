@@ -30,9 +30,9 @@ class ImageReviewer:
         self.config = configparser.ConfigParser()
 
         # 数据属性
-        self.source_dir = "C:\\Users\\liwenfang\\Desktop\\image\\"
-        self.accepted_dir = "C:\\Users\\liwenfang\\Desktop\\image\\accepted/"
-        self.denied_dir = "C:\\Users\\liwenfang\\Desktop\\image\\denied/"
+        self.source_dir = "C:\\Users\\liwenfang\\Desktop\\jpg\\"
+        self.accepted_dir = "C:\\Users\\liwenfang\\Desktop\\jpg\\accepted/"
+        self.denied_dir = "C:\\Users\\liwenfang\\Desktop\\jpg\\denied/"
         self.image_list = []
         self.current_index = 0
         self.total_count = 0

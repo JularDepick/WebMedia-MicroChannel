@@ -1,11 +1,12 @@
 images/
 videos/
 audios/
-src/api/sqlitedb/
+sqlitedb/
 
 .vscode/
 .idea/
 
 .startClaude.bat
+.startMiMo.bat
 
 *.txt

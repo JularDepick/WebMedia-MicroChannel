@@ -2,7 +2,7 @@
 
 # WebMedia-MicroChannel
 
-[![Version](https://img.shields.io/badge/Version-1.1-red)](https://github.com/JularDepick/WebMedia-MicroChannel/releases/tag/v1.1)
+[![Version](https://img.shields.io/badge/Version-1.4-red)](https://github.com/JularDepick/WebMedia-MicroChannel/releases/tag/v1.4)
 [![MIT](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE/MIT)
 [![Copyright](https://img.shields.io/badge/Copyright-JularDepick-0066AA)](./COPYRIGHT)
 
@@ -11,11 +11,11 @@
 
 </div>
 
-A minimalist, lightweight online media browsing platform that anonymously helps popularize your favorite content. Use a lightweight PHP backend to store interaction data.
+A minimalist, lightweight online media browsing platform that anonymously helps popularize your favorite content. Uses a lightweight PHP backend to store interaction data.
 
 ## Features
 
-- **Multi-channel support**: Switch between channels via the top-left button, each with independent resource URL, database, announcement, etc.
+- **Multi-channel support**: Switch between channels via the top-left button, each with independent resource URL, database, announcement, etc. Switching channels automatically interrupts in-flight media loads (images/videos/audios), immediately aborting network requests from the previous channel
 - **Category browsing**: Favorites, Explore, Home, Recommend, Hot, Top Liked, Featured, Best, Shared, Sensitive tabs
 - **Adaptive grid layout**: 1-5 columns freely switchable, 12 card viewport ratio options (original, 16:9, 4:3, 1:1, etc.)
 - **Bookmark system**: Sidebar for adding/jumping/clearing bookmarks to quickly locate content
@@ -24,11 +24,12 @@ A minimalist, lightweight online media browsing platform that anonymously helps 
 - **Fullscreen view**: Click media to enter fullscreen with zoom and 1:1 original size support
 - **Audio player**: Custom audio player with play/pause, progress bar, volume control, speed adjustment
 - **Video player**: Custom video player with playback controls, progress bar, volume, speed settings
-- **Theme switching**: Multiple built-in themes, one-click switch in settings panel
+- **In-card playback controls**: Video/audio cards embed play button, progress bar, and mute button for inline playback without fullscreen
+- **Theme switching**: Multiple built-in themes (Light/Dark, Rose Red, Pink, Summer Orange, Vintage Yellow, Spring Green, Plateau Cyan, Sky Blue, Space Purple), one-click switch in settings panel
 - **Auto data refresh**: Configurable refresh interval (10/30/60 minutes), with manual immediate update
 - **Long-press dropdown menu**: Overflow navigation buttons auto-collapsed into a "More" dropdown control, long-press to expand
 - **Mobile-friendly**: Touch event compatible, responsive layout
-- **Cross-origin media support**: `crossOrigin = 'anonymous'`, compatible with OSS and other third-party resource services
+- **First-visit guide**: Auto-shows operation tips for new visitors
 
 ## Project Structure
 

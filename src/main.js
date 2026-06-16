@@ -43,35 +43,7 @@
           发现高危漏洞请请报告：<a href="mailto:JudeBlack@qq.com">JudeBlack@qq.com</a><br>\
           <b>操作教程：左上角按钮切换频道，探索页随机加载图片，推荐页及其后继页面按热门排序，长按最后一个按钮展开隐藏，左上角侧栏使用书签功能，右上角设置调整显示</b><br>\
           <font color="red"><b>*重要声明：媒体资源均来源于互联网，经过严格的人工审核，无不良引导，请注意甄别，非盈利性质，如侵权请联系删除<b></font><br>\
-          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-home-page&left_text=views"/>',
-      iconSrc: '',
-      useTheme: null,
-      useColCount: null,
-      useRatio: null,
-      backend: 'api/',
-      dbPath: 'sqlitedb/cait/',
-      dbName: 'cait20260609-0.db',
-      tableName: 'media_data',
-      resourceUrl: 'images/',
-      mediaPrefix: 'beauty-',
-      mediaIdLength: 4,
-      mediaIdMin: 1,
-      mediaIdMax: 157,
-      mediaExt: '.jpg',
-      mediaType: 'img'
-    },
-    {
-      id: 'aaaaaaa0',
-      name: '快源',
-      nickname: 'CAIT-AI创意竞赛-WMMC团队参赛作品-在线媒体微频道',
-      announcement: '本项目为CAIT组织的 “AI织页,视呈万象” 创意竞赛参赛作品<br>\
-          开发与调试：<a href="https://github.com/JularDepick/">李文芳</a>、<a href="https://claude.com"><img src="https://img.shields.io/badge/Claude_Code-orange?style=flat&logo=claude&logoColor=white" title="Claude官网"/></a>、<a href="https://platform.xiaomimimo.com"><img src="https://img.shields.io/badge/XiaomiMiMo-grey?style=flat&logo=xiaomi&logoColor=white" title="XiaomiMiMo官网"/></a><br>\
-          图片资源审核：<a href="https://github.com/protect408/">徐健豪</a>、<a href="https://github.com/PQX-666/">彭启轩</a><br>\
-          开源地址：<a href="https://github.com/JularDepick/WebMedia-MicroChannel"><img src="https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white" title="GitHub仓库地址"/></a><br>\
-          发现高危漏洞请请报告：<a href="mailto:JudeBlack@qq.com">JudeBlack@qq.com</a><br>\
-          <b>操作教程：左上角按钮切换频道，探索页随机加载图片，推荐页及其后继页面按热门排序，长按最后一个按钮展开隐藏，左上角侧栏使用书签功能，右上角设置调整显示</b><br>\
-          <font color="red"><b>*重要声明：媒体资源均来源于互联网，经过严格的人工审核，无不良引导，请注意甄别，非盈利性质，如侵权请联系删除<b></font><br>\
-          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-home-page&left_text=views"/>',
+          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-views&left_text=views"/>',
       iconSrc: '',
       useTheme: null,
       useColCount: null,
@@ -99,7 +71,7 @@
           发现高危漏洞请请报告：<a href="mailto:JudeBlack@qq.com">JudeBlack@qq.com</a><br>\
           <b>操作教程：左上角按钮切换频道，探索页随机加载图片，推荐页及其后继页面按热门排序，长按最后一个按钮展开隐藏，左上角侧栏使用书签功能，右上角设置调整显示</b><br>\
           <font color="red"><b>*重要声明：媒体资源均来源于互联网，经过严格的人工审核，无不良引导，请注意甄别，非盈利性质，如侵权请联系删除<b></font><br>\
-          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-home-page&left_text=views"/>',
+          <br><img src="https://visitor-badge.laobi.icu/badge?page_id=wmmc2026-views&left_text=views"/>',
       iconSrc: '',
       useTheme: null,
       useColCount: null,
@@ -108,11 +80,11 @@
       dbPath: 'sqlitedb/cait/',
       dbName: 'cait20260609-1.db',
       tableName: 'media_data',
-      resourceUrl: 'videos/',
+      resourceUrl: 'https://wencue-icu-images-20260608.oss-cn-chengdu.aliyuncs.com/videos/',
       mediaPrefix: 'vd-',
       mediaIdLength: 2,
       mediaIdMin: 1,
-      mediaIdMax: 5,
+      mediaIdMax: 3,
       mediaExt: '.mp4',
       mediaType: 'video'
     }
@@ -143,6 +115,8 @@
    */
 
   let channelIndex = storage.get('channelIndex', 0);
+  let loadGeneration = 0;
+  let channelLoadingCancelled = false;
   channelIndex = Math.max(0, Math.min(CHANNEL_CONFIGS.length - 1, channelIndex));
   // 坐标是否在元素可视范围内（兼容body-append的下拉元素）
   function isPointInElement(x, y, el) {
@@ -154,6 +128,23 @@
 
   // 频道隔离的存储键前缀（基于频道id，非数组索引）
   function cfgKey(key) { return 'cfg_' + cfg().id + '_' + key; }
+
+  function cancelChannelLoading() {
+    loadGeneration++;
+    channelLoadingCancelled = true;
+    for (const instance of cardInstances.values()) {
+      const el = instance.mediaEl;
+      if (!el) continue;
+      if (el.tagName === 'IMG') {
+        el.src = '';
+      } else if (el.tagName === 'VIDEO' || el.tagName === 'AUDIO') {
+        el.pause();
+        el.removeAttribute('src');
+        el.load();
+      }
+    }
+    cardInstances.clear();
+  }
 
   // 主题颜色键预设顺序（colors数组按此顺序一一对应）
   const THEME_KEYS = [
@@ -1434,6 +1425,7 @@
       this.#mediaEl = img;
 
       img.addEventListener('load', () => {
+        if (channelLoadingCancelled) return;
         img.classList.remove('loading');
         img.classList.add('loaded');
         this.#mediaWrap.classList.add('media-loaded');
@@ -1441,6 +1433,7 @@
         recordCardHeight(this);
       });
       img.addEventListener('error', () => {
+        if (channelLoadingCancelled) return;
         img.classList.remove('loading');
         img.classList.add('loaded');
         this.cacheHeight();
@@ -1452,7 +1445,7 @@
       // IntersectionObserver 懒加载
       this.#observer = new IntersectionObserver((entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting && !scrollPauseLoad) {
+          if (entry.isIntersecting && !scrollPauseLoad && !channelLoadingCancelled) {
             img.removeAttribute('loading');
             img.src = img.dataset.src;
             this.#observer.unobserve(img);
@@ -1475,6 +1468,7 @@
       this.#mediaEl = el;
 
       el.addEventListener('loadedmetadata', () => {
+        if (channelLoadingCancelled) return;
         this.#mediaWrap.classList.add('media-loaded');
         this.cacheHeight();
         recordCardHeight(this);
@@ -1483,6 +1477,7 @@
         if (timeEl) timeEl.textContent = '0:00 / ' + cardFormatTime(el.duration);
       });
       el.addEventListener('error', () => {
+        if (channelLoadingCancelled) return;
         this.#mediaWrap.classList.add('media-loaded');
         this.cacheHeight();
         recordCardHeight(this);
@@ -2423,8 +2418,9 @@
   // 按页加载卡片（一页 = CARDS_PER_PAGE 张）
   let isLoadingPage = false;
   function loadNextPage() {
-    if (isLoadingPage) return;
+    if (isLoadingPage || channelLoadingCancelled) return;
     isLoadingPage = true;
+    const gen = loadGeneration;
     const sortedIds = window._sortedIds;
     if (!sortedIds) { isLoadingPage = false; return; }
     const start = currentPage * CARDS_PER_PAGE;
@@ -2461,6 +2457,7 @@
     finishPage();
 
     function finishPage() {
+      if (gen !== loadGeneration) { isLoadingPage = false; return; }
       currentPage++;
       dom.loadIndicator.style.display = 'none';
       isLoadingPage = false;
@@ -2565,7 +2562,7 @@
   function setupInfiniteScroll() {
     scrollObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
-        if (entry.isIntersecting && !scrollPauseLoad) {
+        if (entry.isIntersecting && !scrollPauseLoad && !channelLoadingCancelled) {
           loadNextPage();
           // 加载后移动sentinel到列尾，确保下次触发
           placeSentinel();
@@ -4131,6 +4128,7 @@
         const newIndex = parseInt(val);
         if (newIndex === channelIndex) return;
         dbg('用户操作', '频道切换', { from: CHANNEL_CONFIGS[channelIndex].name, to: CHANNEL_CONFIGS[newIndex].name, reload: true });
+        cancelChannelLoading();
         storage.set('channelIndex', newIndex);
         storage.set('currentTab', 'home');
         location.reload();
