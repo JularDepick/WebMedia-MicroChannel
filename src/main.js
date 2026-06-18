@@ -130,6 +130,7 @@
   function cfgKey(key) { return 'cfg_' + cfg().id + '_' + key; }
 
   function cancelChannelLoading() {
+    debugLog('取消频道加载', { generation: loadGeneration + 1 });
     loadGeneration++;
     channelLoadingCancelled = true;
     for (const instance of cardInstances.values()) {
@@ -299,7 +300,8 @@
     featured: '按收藏量降序排序',
     best: '按下载量降序排序',
     shared: '按分享量降序排序',
-    sensitive: '按屏蔽量降序排序'
+    sensitive: '按屏蔽量降序排序',
+    labeled: '按标签筛选媒体，多个标签取交集'
   };
 
   /* ---------- 状态 ---------- */
@@ -308,6 +310,8 @@
   let tabBarBtn = null;
   let currentPage = 0;
   let scrollPauseLoad = false; // 快速滚动时暂停加载
+  let labelFilter = [];        // 标签筛选条件
+  let labelFilterMode = 'exact'; // 'exact'=完整匹配, 'partial'=部分匹配
 
   /* ============================================================
      设备环境检测（基于特性检测，不依赖UA）
@@ -395,6 +399,7 @@
     '1:2': 200,     '2:3': 150,     '3:4': 133.33,  '4:5': 125,     '9:16': 177.78,
   };
   let mediaRatio = storage.get('mediaRatio', isMobile() ? '1:1' : 'original');
+  let showLabelBanner = storage.get('showLabelBanner', true);
 
   // 每页加载行数（卡片总数 = ROWS_PER_PAGE * colCount）
   const ROWS_PER_PAGE = 3;
@@ -439,6 +444,7 @@
     const colW = computeFixedColumnWidth(w, preferredCols, 0, 9999, gap, 0.8);
     if (colW === _lastColW) return;
     _lastColW = colW;
+    debugLog('布局变化: 应用列宽', { colW, 容器宽度: w, 列数: preferredCols });
     dom.gridContainer.querySelectorAll('.original-column').forEach(col => {
       col.style.width = colW + 'px';
     });
@@ -768,6 +774,7 @@
   let downloadsData = null; // [{id, count}, ...] 按下载量
   let sharesData = null;    // [{id, count}, ...] 按分享量
   let blocksData = null;    // [{id, count}, ...] 按屏蔽量
+  let labelsData = null;    // [{id, labels: []}, ...] 标签数据
 
   // 全屏状态
   let fsScale = 1;
@@ -806,6 +813,7 @@
     themeSwitch: $('#themeSwitch'),
     ratioSwitch: $('#ratioSwitch'),
     cacheCycleSwitch: $('#cacheCycleSwitch'),
+    labelBannerSwitch: $('#labelBannerSwitch'),
     btnForceRefresh: $('#btnForceRefresh'),
     gridContainer: $('#gridContainer'),
     announcementBar: $('#announcementBar'),
@@ -832,6 +840,13 @@
     zoomOut: $('#zoomOut'),
     zoomReset: $('#zoomReset'),
     mainContent: $('#mainContent'),
+    labelFilterBar: $('#labelFilterBar'),
+    labelFilterWrap: $('#labelFilterWrap'),
+    labelFilterTags: $('#labelFilterTags'),
+    labelFilterInput: $('#labelFilterInput'),
+    labelFilterClear: $('#labelFilterClear'),
+    labelFilterMode: $('#labelFilterMode'),
+    labelFilterHint: $('#labelFilterHint'),
   };
 
   /* ============================================================
@@ -875,6 +890,15 @@
       console.error('%c[' + cat + ']%c ' + text, style, 'color:inherit', data);
     } else {
       console.error('%c[' + cat + ']%c ' + text, style, 'color:inherit');
+    }
+  }
+
+  function debugLog(msg, data) {
+    if (!DEBUG) return;
+    if (data !== undefined) {
+      console.log('[DEBUG] ' + msg, data);
+    } else {
+      console.log('[DEBUG] ' + msg);
     }
   }
 
@@ -1057,24 +1081,26 @@
     if (!canRequestAPI()) return Promise.resolve(null);
     const statsActions = ['view', 'like', 'favorite'];
     const table = statsActions.includes(action) ? 'stats' : 'extra';
+    debugLog('API请求发出', { url: cfg().backend + 'data.php', action, id, table });
     dbg('后端通信', 'POST → ' + cfg().backend + 'data.php', { dbPath: cfg().dbPath || '', db: cfg().dbName, table, action, id });
     return fetch(cfg().backend + 'data.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ dbPath: cfg().dbPath || '', db: cfg().dbName, table, action, id })
-    }).then(r => r.json()).then(data => { dbg('后端通信', 'POST ✓ 响应', { 请求: { action, id, table }, 响应: data }); return data; }).catch((e) => { dbgW('后端通信', 'POST ✗ 异常', { 请求: { action, id, table }, error: e.message }); return null; });
+    }).then(r => r.json()).then(data => { debugLog('API响应接收', { action, id, 响应: data }); dbg('后端通信', 'POST ✓ 响应', { 请求: { action, id, table }, 响应: data }); return data; }).catch((e) => { debugLog('API请求异常', { action, id, 错误: e.message }); dbgW('后端通信', 'POST ✗ 异常', { 请求: { action, id, table }, error: e.message }); return null; });
   }
 
   function apiGetData() {
     if (!canRequestAPI()) return Promise.resolve(null);
     const c = cfg();
     const body = { dbPath: c.dbPath || '', db: c.dbName, action: 'getData', min: c.mediaIdMin, max: c.mediaIdMax };
+    debugLog('API数据请求发出', { url: c.backend + 'data.php', db: c.dbName, min: c.mediaIdMin, max: c.mediaIdMax });
     dbg('后端通信', 'POST → ' + c.backend + 'data.php', body);
     return fetch(c.backend + 'data.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
-    }).then(r => r.json())
+    }).then(r => r.json()).then(data => { debugLog('API数据响应接收', { 响应: data }); return data; })
       .catch(() => null);
   }
 
@@ -1087,7 +1113,7 @@
   }
 
   function getCacheCycle() {
-    return storage.get('cacheCycle', 3600000);
+    return storage.get('cacheCycle', 600000);
   }
 
   // 获取上次拉取时间
@@ -1113,6 +1139,7 @@
 
   // 页面加载时初始化：无本地数据则写入默认全量数据（count=0），然后统一从储存加载到内存
   function loadLocalToMemory() {
+    debugLog('加载本地数据到内存', { 上次拉取: getLastFetchTime() });
     if (getLastFetchTime() === 0) {
       // 无本地数据：生成默认全量数据写入localStorage，拉取时间设为0（保证绝对过期）
       const defaultData = [];
@@ -1129,6 +1156,7 @@
       const cached = storage.get(getCacheKey(tab), null);
       slot.set(cached && cached.data ? cached.data : []);
     }
+    loadLabelsFromStorage();
     dbg('储存变更', 'localStorage → 内存变量', { hot: fetchHotData().slice(), topliked: fetchTopLikedData().slice(), featured: fetchFeaturedData().slice(), downloads: fetchDownloadsData().slice(), shares: fetchSharesData().slice(), blocks: fetchBlocksData().slice() });
   }
 
@@ -1150,8 +1178,32 @@
   function fetchSharesData()    { return readData('shares'); }
   function fetchBlocksData()    { return readData('blocks'); }
 
+  /* ---------- 标签缓存 ---------- */
+  function getLabelsCacheKey() { return 'cache_' + cfg().id + '_labels'; }
+
+  function syncLabelsToStorage() {
+    if (labelsData) storage.set(getLabelsCacheKey(), { data: labelsData, lastFetchTime: getLastFetchTime() });
+  }
+
+  function loadLabelsFromStorage() {
+    const cached = storage.get(getLabelsCacheKey(), null);
+    if (cached && cached.data) {
+      labelsData = cached.data;
+    } else {
+      labelsData = [];
+      for (let i = cfg().mediaIdMin; i <= cfg().mediaIdMax; i++) labelsData.push({ id: i, labels: [] });
+    }
+  }
+
+  function getLabelsForMedia(id) {
+    if (!labelsData) return [];
+    const item = labelsData.find(d => d.id === id);
+    return item ? item.labels : [];
+  }
+
   // 统一拉取：一次请求获取 stats + extra 两张表（仅在无本地数据或手动刷新时调用）
   async function fetchAllDataFromServer() {
+    debugLog('从服务器拉取数据开始', { 频道: cfg().name, 后端: cfg().backend });
     try {
       if (!canRequestAPI()) {
         dbgW('后端通信', 'file://协议+本地后端，跳过', { backend: cfg().backend });
@@ -1167,6 +1219,15 @@
       const now = Date.now();
       const statsData = res.stats;
       const extraData = Array.isArray(res.extra) ? res.extra : [];
+      const labelsRaw = Array.isArray(res.labels) ? res.labels : [];
+
+      // 标签数据：构建 id→labels 映射
+      const labelsMap = {};
+      labelsRaw.forEach(d => { labelsMap[d.id] = Array.isArray(d.labels) ? d.labels : []; });
+      labelsData = [];
+      for (let i = cfg().mediaIdMin; i <= cfg().mediaIdMax; i++) {
+        labelsData.push({ id: i, labels: labelsMap[i] || [] });
+      }
 
       // 快照当前本地数据，用于合并用户增量
       const localSnap = {};
@@ -1212,17 +1273,21 @@
       await new Promise(r => setTimeout(r, 0));
       storage.set(cfgKey('lastFetchTime'), now);
       for (const tab of Object.keys(DATA_SLOTS)) syncToStorage(tab);
+      syncLabelsToStorage();
 
       dbg('后端通信', 'GET ✓ 拆分写入6个内存变量', { 请求: { dbPath: cfg().dbPath || '', db: cfg().dbName, min: cfg().mediaIdMin, max: cfg().mediaIdMax }, 响应: { stats: statsData, extra: extraData }, 写入: { hot: fetchHotData().slice(), topliked: fetchTopLikedData().slice(), featured: fetchFeaturedData().slice(), downloads: fetchDownloadsData().slice(), shares: fetchSharesData().slice(), blocks: fetchBlocksData().slice() } });
+      debugLog('从服务器拉取数据成功', { stats条数: statsData.length, extra条数: extraData.length });
       return true;
     } catch (e) {
       dbgE('后端通信', 'GET ✗ 异常', { error: e.message, stack: e.stack });
+      debugLog('从服务器拉取数据异常', { 错误: e.message });
       return false;
     }
   }
 
   // 页面加载后：无本地数据或缓存过期时自动拉取
   async function checkAndRefreshData() {
+    debugLog('检查数据缓存状态', { 上次拉取: getLastFetchTime(), 周期: getCacheCycle() });
     const lastFetch = getLastFetchTime();
     const cycle = getCacheCycle();
     const elapsed = Date.now() - lastFetch;
@@ -1236,6 +1301,7 @@
     dbg('后端通信', hasLocal ? '缓存已过期，自动拉取' : '无本地数据，自动拉取', { lastFetchTime: lastFetch, 距上次: Math.round(elapsed / 1000) + 's', 周期: Math.round(cycle / 1000) + 's' });
     const success = await fetchAllDataFromServer();
     if (success) {
+      debugLog('自动拉取数据成功', { tab: currentTab });
       dbg('后端通信', '自动拉取成功', { tab: currentTab });
       resetAndLoad(false);
     }
@@ -1248,6 +1314,7 @@
   let exploreUsed = new Set();
 
   function generateSortedIds(tab) {
+    debugLog('生成排序ID序列', { tab, 范围: cfg().mediaIdMin + '-' + cfg().mediaIdMax });
     if (tab === 'home') {
       const ids = [];
       for (let i = cfg().mediaIdMin; i <= cfg().mediaIdMax; i++) {
@@ -1296,6 +1363,40 @@
       });
       scored.sort((a, b) => b.score !== a.score ? b.score - a.score : a.id - b.id);
       return includeBlocked ? scored.map(d => d.id) : scored.filter(d => !isBlocked(d.id)).map(d => d.id);
+    }
+    if (tab === 'labeled') {
+      /* 标签筛选：逐个卡片核对交集条件，按推荐公式排序 */
+      const allIds = [];
+      for (let i = cfg().mediaIdMin; i <= cfg().mediaIdMax; i++) allIds.push(i);
+      let filtered = allIds;
+      if (labelFilter.length > 0) {
+        filtered = allIds.filter(id => {
+          const tags = getLabelsForMedia(id);
+          if (tags.length === 0) return false;
+          return labelFilter.every(f => {
+            if (labelFilterMode === 'partial') {
+              return tags.some(t => t.includes(f));
+            }
+            return tags.indexOf(f) !== -1;
+          });
+        });
+      }
+      /* 按推荐公式排序 */
+      fetchHotData(); fetchTopLikedData(); fetchFeaturedData();
+      fetchDownloadsData(); fetchSharesData(); fetchBlocksData();
+      const viewMap = {}, likeMap = {}, favMap = {}, dlMap = {}, shareMap = {}, blockMap = {};
+      (hotData || []).forEach(d => viewMap[d.id] = d.count);
+      (topLikedData || []).forEach(d => likeMap[d.id] = d.count);
+      (featuredData || []).forEach(d => favMap[d.id] = d.count);
+      (downloadsData || []).forEach(d => dlMap[d.id] = d.count);
+      (sharesData || []).forEach(d => shareMap[d.id] = d.count);
+      (blocksData || []).forEach(d => blockMap[d.id] = d.count);
+      filtered.sort((a, b) => {
+        const sa = ((viewMap[a] || 0) + (likeMap[a] || 0) * 2 + (favMap[a] || 0) * 3 + (dlMap[a] || 0) * 3 + (shareMap[a] || 0) * 2 - (blockMap[a] || 0) * 5) / 15;
+        const sb = ((viewMap[b] || 0) + (likeMap[b] || 0) * 2 + (favMap[b] || 0) * 3 + (dlMap[b] || 0) * 3 + (shareMap[b] || 0) * 2 - (blockMap[b] || 0) * 5) / 15;
+        return sb !== sa ? sb - sa : a - b;
+      });
+      return filtered.filter(id => !isBlocked(id));
     }
     if (slotMap[tab]) {
       const data = slotMap[tab]().slice().sort((a, b) => b.count !== a.count ? b.count - a.count : a.id - b.id);
@@ -1348,7 +1449,7 @@
   });
 
   class MediaCard {
-    #id; #el; #mediaWrap; #mediaEl; #observer; #playOverlay; #playerBar;
+    #id; #el; #mediaWrap; #mediaEl; #observer; #playOverlay; #playerBar; #labelBanner;
     #btns = {};
     #cachedH = 0; #hReported = false; #hPlaceholder = false;
 
@@ -1359,6 +1460,13 @@
       card.className = 'media-card';
       card.dataset.id = id;
       this.#el = card;
+
+      // ── 标签横幅 ──
+      const labelBanner = document.createElement('div');
+      labelBanner.className = 'card-label-banner';
+      this.#labelBanner = labelBanner;
+      this.#syncLabels();
+      card.appendChild(labelBanner);
 
       // ── 媒体区域 ──
       const mediaWrap = document.createElement('div');
@@ -1383,6 +1491,7 @@
 
       // 注册缓存
       cardInstances.set(id, this);
+      debugLog('媒体卡片创建', { id, 类型: cfg().mediaType, 缓存总数: cardInstances.size });
     }
 
     // ── 只读属性 ──
@@ -1434,6 +1543,7 @@
       });
       img.addEventListener('error', () => {
         if (channelLoadingCancelled) return;
+        debugLog('媒体加载失败', { id, 类型: 'img', 路径: mediaPath(id) });
         img.classList.remove('loading');
         img.classList.add('loaded');
         this.cacheHeight();
@@ -1478,6 +1588,7 @@
       });
       el.addEventListener('error', () => {
         if (channelLoadingCancelled) return;
+        debugLog('媒体加载失败', { id, 类型: type, 路径: mediaPath(id) });
         this.#mediaWrap.classList.add('media-loaded');
         this.cacheHeight();
         recordCardHeight(this);
@@ -1615,6 +1726,7 @@
     // ── 状态同步（缓存命中时调用） ──
     syncState(tab) {
       this.ensureLoaded();
+      this.#syncLabels();
       const b = this.#btns;
       b.like.classList.toggle('active-like', isLiked(this.#id));
       b.like.title = isLiked(this.#id) ? '已赞' : '点赞';
@@ -1640,6 +1752,23 @@
         const count = item ? item.count : 0;
         const btn = action === 'view' ? this.#btns.view : this.#btns[action];
         if (btn && btn._countEl) btn._countEl.textContent = formatCount(count);
+      }
+    }
+
+    // ── 标签同步 ──
+    #syncLabels() {
+      const labels = getLabelsForMedia(this.#id);
+      this.#labelBanner.innerHTML = '';
+      if (labels.length === 0) {
+        this.#labelBanner.style.display = 'none';
+        return;
+      }
+      this.#labelBanner.style.display = '';
+      for (const text of labels) {
+        const tag = document.createElement('span');
+        tag.className = 'card-label-tag';
+        tag.textContent = text;
+        this.#labelBanner.appendChild(tag);
       }
     }
 
@@ -1718,6 +1847,7 @@
   function handleLike(id, instance) {
     const btn = instance.btns.like;
     const nowLiked = toggleLike(id);
+    debugLog('用户操作: ' + (nowLiked ? '点赞' : '取消点赞'), { id });
     if (nowLiked) {
       dbg('用户操作', '点赞 id=' + id, { id, B列表已通知: isLikeNotified(id), 通知后端: !isLikeNotified(id) });
       btn.classList.add('active-like');
@@ -1738,6 +1868,7 @@
   function handleFavorite(id, instance) {
     const btn = instance.btns.favorite;
     const nowFav = toggleFavorite(id);
+    debugLog('用户操作: ' + (nowFav ? '收藏' : '取消收藏'), { id });
     if (nowFav) {
       dbg('用户操作', '收藏 id=' + id, { id, B列表已通知: isFavNotified(id), 通知后端: !isFavNotified(id) });
       btn.classList.add('active-fav');
@@ -1766,6 +1897,7 @@
   }
 
   function handleShare(id) {
+    debugLog('用户操作: 分享', { id });
     dbg('用户操作', '分享 id=' + id, { id, B列表已通知: isShareNotified(id), 通知后端: !isShareNotified(id) });
     const url = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '') + '/' + mediaPath(id);
     navigator.clipboard.writeText(url).then(() => {
@@ -1788,6 +1920,7 @@
   }
 
   async function handleDownload(id) {
+    debugLog('用户操作: 下载', { id });
     dbg('用户操作', '下载 id=' + id, { id, B列表已通知: isDownloadNotified(id), 通知后端: !isDownloadNotified(id) });
     const url = mediaPath(id);
     const name = cfg().mediaPrefix + padId(id) + cfg().mediaExt;
@@ -1854,6 +1987,7 @@
   }
 
   function handleBlock(id, instance) {
+    debugLog('用户操作: 屏蔽', { id, tab: currentTab });
     dbg('用户操作', '屏蔽 id=' + id, { id, tab: currentTab, B列表已通知: isBlockNotified(id), 通知后端: !isBlockNotified(id) });
     blockMedia(id);
     let newCount = 0;
@@ -1922,6 +2056,7 @@
   }
 
   function recordView(id) {
+    debugLog('记录浏览', { id });
     setViewCooldown(id);
     apiPost('view', id);
     const newCount = incrementCacheCount('hot', id);
@@ -1930,6 +2065,7 @@
 
   function openFullscreen(id) {
     const mediaType = cfg().mediaType || 'img';
+    debugLog('播放器操作: 打开全屏', { id, 类型: mediaType });
     const cooldown = mediaType === 'img' ? VIEW_COOLDOWN_IMG : VIEW_COOLDOWN_MEDIA;
     dbg('用户操作', '全屏查看 id=' + id, { id, 类型: mediaType, 冷冻期: isViewCooldown(id, cooldown), 冷冻时长: cooldown / 1000 + 's', 计数: mediaType === 'img' ? !isViewCooldown(id, cooldown) : '等待播放' });
 
@@ -2021,6 +2157,7 @@
   }
 
   function closeFullscreen() {
+    debugLog('播放器操作: 关闭全屏', { 类型: currentFsMediaType });
     dbg('用户操作', '关闭全屏', { type: currentFsMediaType });
 
     // 停止播放器事件和自动隐藏
@@ -2201,6 +2338,7 @@
   }
 
   function playerInit(mediaEl) {
+    debugLog('播放器操作: 初始化播放器', { 已播放: !mediaEl.paused });
     // 同步控件状态到媒体当前状态
     const isPlaying = !mediaEl.paused;
     dom.playerPlayPause.innerHTML = isPlaying ? '&#10074;&#10074;' : '&#9654;';
@@ -2274,6 +2412,7 @@
   }
 
   function playerOnPlay() {
+    debugLog('播放器操作: 开始播放', { id: currentFsId, 时间: currentFsMediaEl ? currentFsMediaEl.currentTime : 0 });
     dom.playerPlayPause.innerHTML = '&#10074;&#10074;';
     dom.playerPlayPause.classList.add('playing');
     playerShowAndScheduleHide();
@@ -2288,6 +2427,7 @@
   }
 
   function playerOnPause() {
+    debugLog('播放器操作: 暂停播放', { id: currentFsId });
     dom.playerPlayPause.innerHTML = '&#9654;';
     dom.playerPlayPause.classList.remove('playing');
     playerClearTimer();
@@ -2295,6 +2435,7 @@
   }
 
   function playerOnEnded() {
+    debugLog('播放器操作: 播放结束', { id: currentFsId });
     dom.playerPlayPause.innerHTML = '&#9654;';
     dom.playerPlayPause.classList.remove('playing');
     playerClearTimer();
@@ -2303,6 +2444,7 @@
 
   function playerTogglePlayPause() {
     if (!currentFsMediaEl) return;
+    debugLog('播放器操作: ' + (currentFsMediaEl.paused ? '播放' : '暂停'));
     if (currentFsMediaEl.paused) {
       currentFsMediaEl.play().catch(() => {});
     } else {
@@ -2462,11 +2604,13 @@
       dom.loadIndicator.style.display = 'none';
       isLoadingPage = false;
       dbg('页面加载', 'loadNextPage', { page: currentPage, 本页数: pageIds.length, tab: currentTab, ratio: mediaRatio });
+      debugLog('媒体卡片渲染: 加载第' + currentPage + '页', { 本页数: pageIds.length, tab: currentTab });
     }
   }
 
   /* ---------- 重建列容器（不重载内容） ---------- */
   function rebuildOriginalColumns() {
+    debugLog('布局变化: 重建列容器', { colCount, ratio: mediaRatio, tab: currentTab });
     dbg('布局变化', 'rebuildOriginalColumns', { colCount, ratio: mediaRatio, tab: currentTab });
     dom.gridContainer.innerHTML = '';
 
@@ -2510,6 +2654,7 @@
 
   /* ---------- 重置并加载 ---------- */
   function resetAndLoad(resetExplore = true) {
+    debugLog('页面加载: 重置并加载', { tab: currentTab, resetExplore });
     dbg('页面加载', 'resetAndLoad', { tab: currentTab, 旧缓存数: (tabCardOrder[currentTab] || []).length });
     scrollPauseLoad = false;
     currentPage = 0;
@@ -2616,6 +2761,91 @@
 
   function updateInfoBars() {
     dom.descriptionBar.textContent = TAB_DESCRIPTIONS[currentTab] || '';
+    /* 标签筛选栏显隐 */
+    const showFilter = currentTab === 'labeled';
+    dom.labelFilterBar.style.display = showFilter ? '' : 'none';
+    if (showFilter) renderLabelFilter();
+  }
+
+  /* ---------- 标签筛选 UI ---------- */
+  function renderLabelFilter() {
+    dom.labelFilterTags.innerHTML = '';
+    labelFilter.forEach((label, idx) => {
+      const chip = document.createElement('span');
+      chip.className = 'label-filter-tag';
+      const text = document.createElement('span');
+      text.textContent = label;
+      chip.appendChild(text);
+      const remove = document.createElement('span');
+      remove.className = 'remove';
+      remove.textContent = '\u00d7';
+      remove.addEventListener('click', () => {
+        labelFilter.splice(idx, 1);
+        onLabelFilterChange();
+      });
+      chip.appendChild(remove);
+      dom.labelFilterTags.appendChild(chip);
+    });
+    dom.labelFilterHint.textContent = labelFilter.length > 0
+      ? '已选 ' + labelFilter.length + ' 个标签，' + (labelFilterMode === 'partial' ? '部分匹配' : '完整匹配') + '，取交集'
+      : '输入标签筛选媒体，多个标签取交集，留空显示全部';
+  }
+
+  function addLabelFilter(input) {
+    const val = input.value.replace(/,/g, '').trim();
+    if (val && labelFilter.indexOf(val) === -1) {
+      labelFilter.push(val);
+      debugLog('标签筛选: 添加标签', { 标签: val, 当前筛选条件: labelFilter.slice() });
+      onLabelFilterChange();
+    }
+    input.value = '';
+  }
+
+  function onLabelFilterChange() {
+    debugLog('标签筛选: 筛选条件变更', { 标签: labelFilter.slice(), 模式: labelFilterMode });
+    renderLabelFilter();
+    if (currentTab === 'labeled') resetAndLoad(false);
+  }
+
+  function setupLabelFilter() {
+    dom.labelFilterWrap.addEventListener('click', () => {
+      dom.labelFilterInput.focus();
+    });
+    /* 清空按钮 */
+    dom.labelFilterClear.addEventListener('click', () => {
+      if (labelFilter.length === 0) return;
+      labelFilter = [];
+      dom.labelFilterInput.value = '';
+      onLabelFilterChange();
+    });
+    /* 模式切换 */
+    dom.labelFilterMode.addEventListener('click', () => {
+      labelFilterMode = labelFilterMode === 'exact' ? 'partial' : 'exact';
+      debugLog('标签筛选: 模式切换', { 模式: labelFilterMode });
+      dom.labelFilterMode.textContent = labelFilterMode === 'partial' ? '部分匹配' : '完整匹配';
+      dom.labelFilterMode.classList.toggle('partial', labelFilterMode === 'partial');
+      renderLabelFilter();
+      if (labelFilter.length > 0) onLabelFilterChange();
+    });
+    dom.labelFilterInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        addLabelFilter(dom.labelFilterInput);
+      }
+      if (e.key === 'Backspace' && dom.labelFilterInput.value === '' && labelFilter.length > 0) {
+        labelFilter.pop();
+        onLabelFilterChange();
+      }
+    });
+    dom.labelFilterInput.addEventListener('input', () => {
+      if (dom.labelFilterInput.value.indexOf(',') !== -1) {
+        addLabelFilter(dom.labelFilterInput);
+      }
+    });
+    /* 阻止回车提交表单（保持键盘展开） */
+    dom.labelFilterInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') e.preventDefault();
+    });
   }
 
   function setSidebarEnabled(enabled) {
@@ -2637,6 +2867,7 @@
   }
 
   function switchTab(tab) {
+    debugLog('Tab切换: 切换到 ' + tab, { from: currentTab, to: tab });
     dbg('用户操作', 'switchTab', { tab, currentTab, tabBarBtnCurrent: tabBarBtn?.getCurrent() });
     if (tab === currentTab && tabBarBtn && tabBarBtn.getCurrent() === tab) {
       dbg('用户操作', 'switchTab → 跳过（已是当前）', { tab });
@@ -2647,6 +2878,7 @@
   }
 
   function _handleTabSwitch(tab, isDblClick) {
+    debugLog('Tab切换: 处理切换', { from: currentTab, to: tab, 双击: isDblClick });
     dbg(initializing ? '系统初化' : '用户操作', 'switchTab ' + currentTab + ' → ' + tab, { from: currentTab, to: tab, 缓存数: (tabCardOrder[tab] || []).length, cardDomCache总数: cardInstances.size });
     // 重置再平衡状态，保证新 tab 滚动到底部能正确触发
     atBottom = false;
@@ -2667,7 +2899,7 @@
       return;
     }
 
-    setSidebarEnabled(tab !== 'explore');
+    setSidebarEnabled(tab !== 'explore' && tab !== 'labeled');
     scrollPauseLoad = true;
     window.scrollTo(0, 0);
     updateInfoBars();
@@ -2678,7 +2910,11 @@
   // 从全局缓存恢复卡片，返回是否成功
   function restoreTabCards(tab) {
     const order = tabCardOrder[tab];
-    if (!order || order.length === 0) return false;
+    if (!order || order.length === 0) {
+      debugLog('恢复Tab卡片: 无缓存', { tab });
+      return false;
+    }
+    debugLog('恢复Tab卡片', { tab, 缓存数: order.length });
 
     // 按当前tab的排序规则重新排序缓存ID
     const slotMap = { hot: 'hot', topliked: 'topliked', featured: 'featured', best: 'downloads', shared: 'shares', sensitive: 'blocks' };
@@ -2691,6 +2927,20 @@
       // 按当前收藏列表顺序重排（取消收藏的项自然脱落）
       sortedIds = getFavorites().filter(id => order.includes(id));
     } else if (tab === 'recommend') {
+      const viewMap = {}, likeMap = {}, favMap = {}, dlMap = {}, shareMap = {}, blockMap = {};
+      (hotData || []).forEach(d => viewMap[d.id] = d.count);
+      (topLikedData || []).forEach(d => likeMap[d.id] = d.count);
+      (featuredData || []).forEach(d => favMap[d.id] = d.count);
+      (downloadsData || []).forEach(d => dlMap[d.id] = d.count);
+      (sharesData || []).forEach(d => shareMap[d.id] = d.count);
+      (blocksData || []).forEach(d => blockMap[d.id] = d.count);
+      sortedIds = order.slice().sort((a, b) => {
+        const sa = ((viewMap[a] || 0) + (likeMap[a] || 0) * 2 + (favMap[a] || 0) * 3 + (dlMap[a] || 0) * 3 + (shareMap[a] || 0) * 2 - (blockMap[a] || 0) * 5) / 15;
+        const sb = ((viewMap[b] || 0) + (likeMap[b] || 0) * 2 + (favMap[b] || 0) * 3 + (dlMap[b] || 0) * 3 + (shareMap[b] || 0) * 2 - (blockMap[b] || 0) * 5) / 15;
+        return sb !== sa ? sb - sa : a - b;
+      });
+    } else if (tab === 'labeled') {
+      /* 标签筛选：按推荐公式排序 */
       const viewMap = {}, likeMap = {}, favMap = {}, dlMap = {}, shareMap = {}, blockMap = {};
       (hotData || []).forEach(d => viewMap[d.id] = d.count);
       (topLikedData || []).forEach(d => likeMap[d.id] = d.count);
@@ -4038,6 +4288,7 @@
      ============================================================ */
 
   function applyColCount() {
+    debugLog('列数切换: ' + preferredCols, { from: colCount, to: preferredCols });
     dbg(initializing ? '系统初化' : '布局变化', 'applyColCount', { colCount, preferredCols });
     storage.set('colCount', preferredCols);
 
@@ -4084,6 +4335,7 @@
   function applyTheme(index) {
     themeIndex = Math.max(0, Math.min(THEMES.length - 1, index));
     const t = thm();
+    debugLog('主题切换: ' + t.name, { index });
     dbg(initializing ? '系统初化' : '用户操作', 'applyTheme', { name: t.name, index });
     const root = document.documentElement;
     THEME_KEYS.forEach((k, i) => { root.style.setProperty(k, t.colors[i]); });
@@ -4128,6 +4380,7 @@
         const newIndex = parseInt(val);
         if (newIndex === channelIndex) return;
         dbg('用户操作', '频道切换', { from: CHANNEL_CONFIGS[channelIndex].name, to: CHANNEL_CONFIGS[newIndex].name, reload: true });
+        debugLog('频道切换: 切换到频道 ' + CHANNEL_CONFIGS[newIndex].name, { from: channelIndex, to: newIndex });
         cancelChannelLoading();
         storage.set('channelIndex', newIndex);
         storage.set('currentTab', 'home');
@@ -4150,6 +4403,7 @@
      ============================================================ */
 
   function applyRatio(ratio) {
+    debugLog('视窗比例切换: ' + ratio, { from: mediaRatio, to: ratio });
     dbg(initializing ? '系统初化' : '布局变化', 'applyRatio', { from: mediaRatio, to: ratio });
     mediaRatio = ratio;
     storage.set('mediaRatio', ratio);
@@ -4192,6 +4446,7 @@
      ============================================================ */
 
   function toggleSettingsPanel(open) {
+    debugLog('设置面板: ' + (open ? '打开' : '关闭'));
     if (open) {
       dom.settingsPanel.classList.add('open');
     } else {
@@ -4248,6 +4503,7 @@
     }, { passive: false });
 
     setupDataCache();
+    setupLabelBannerSwitch();
   }
 
   /* ============================================================
@@ -4323,6 +4579,31 @@
   }
 
   /* ============================================================
+     卡片标签栏开关
+     ============================================================ */
+
+  function setupLabelBannerSwitch() {
+    document.body.classList.toggle('hide-label-banner', !showLabelBanner);
+    dom.labelBannerSwitch.querySelectorAll('.col-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.labelBanner === (showLabelBanner ? '1' : '0'));
+    });
+
+    dom.labelBannerSwitch.querySelectorAll('.col-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.labelBanner === '1';
+        if (val === showLabelBanner) return;
+        showLabelBanner = val;
+        storage.set('showLabelBanner', showLabelBanner);
+        dbg('储存变更', '卡片标签栏', { 开启: showLabelBanner });
+        dom.labelBannerSwitch.querySelectorAll('.col-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.labelBanner === (showLabelBanner ? '1' : '0'));
+        });
+        document.body.classList.toggle('hide-label-banner', !showLabelBanner);
+      });
+    });
+  }
+
+  /* ============================================================
      初始化
      ============================================================ */
 
@@ -4338,6 +4619,7 @@
 
   function init() {
     checkFirstVisit();
+    debugLog('页面初始化开始', { 协议: location.protocol, 频道: cfg().name, 类型: cfg().mediaType, 范围: cfg().mediaIdMin + '-' + cfg().mediaIdMax });
     dbg('系统初化', 'init开始', { 协议: location.protocol, 频道: cfg().name, dbPath: cfg().dbPath || '', db: cfg().dbName, 类型: cfg().mediaType, 范围: cfg().mediaIdMin + '-' + cfg().mediaIdMax, 后端: cfg().backend });
     updatePageTitle();
     updatePageIcon();
@@ -4372,6 +4654,7 @@
     setupFullscreen();
     setupInfiniteScroll();
     setupBackToTop();
+    setupLabelFilter();
 
     // 设备类型变化时更新列数约束
     DeviceEnv.subscribe((type) => {
@@ -4450,6 +4733,7 @@
     switchTab(savedTab);
 
     initializing = false;
+    debugLog('页面初始化完成', { 设备: DeviceEnv.type, tab: currentTab, 主题: THEMES[themeIndex].name, 列数: colCount, 比例: mediaRatio });
     dbg('系统初化', 'init完成', { 设备: DeviceEnv.type, tab: currentTab, 主题: THEMES[themeIndex].name, 列数: colCount, 比例: mediaRatio, 频道数: CHANNEL_CONFIGS.length, isFileProtocol, canAPI: canRequestAPI() });
   }
 

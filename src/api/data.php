@@ -3,12 +3,13 @@
  * 统一数据接口
  *
  * GET  ?dbPath=&db=xxx&min=1&max=100
- *   → 返回 { stats: [{id,views,likes,favorites},...], extra: [{id,downloads,shares,blocks},...] }
+ *   → 返回 { stats, extra, labels }
  *
  * POST { dbPath, db, table, action, id }
  *   table: "stats" / "extra"
  *   stats  action: "view" / "like" / "favorite"
  *   extra  action: "download" / "share" / "block"
+ *   标签操作: action: "getLabels" / "setLabels"（需dbPath, db, id, labels）
  */
 
 error_reporting(E_ALL);
@@ -82,6 +83,12 @@ try {
                     $stmt2->bindValue(':id', $i, SQLITE3_INTEGER);
                     $stmt2->execute();
                 }
+
+                $stmt3 = $conn->prepare('INSERT OR IGNORE INTO media_labels (media_id, labels) VALUES (:id, \'[]\')');
+                for ($i = $maxExisting + 1; $i <= $expandTo; $i++) {
+                    $stmt3->bindValue(':id', $i, SQLITE3_INTEGER);
+                    $stmt3->execute();
+                }
             }
         }
 
@@ -98,8 +105,15 @@ try {
             $extra[] = $row;
         }
 
+        $labels = [];
+        $result = $conn->query('SELECT media_id AS id, labels FROM media_labels' . $whereClause);
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            $row['labels'] = json_decode($row['labels'], true) ?: [];
+            $labels[] = $row;
+        }
+
         $conn->close();
-        echo json_encode(['stats' => $stats, 'extra' => $extra]);
+        echo json_encode(['stats' => $stats, 'extra' => $extra, 'labels' => $labels]);
         exit;
     }
 
@@ -110,6 +124,46 @@ try {
         $table  = isset($input['table'])  ? $input['table']  : 'stats';
         $action = isset($input['action']) ? $input['action'] : '';
         $id     = isset($input['id'])     ? intval($input['id']) : 0;
+
+        /* 标签操作分支 */
+        if ($action === 'getLabels') {
+            initDB($db, $dbPath);
+            $conn = getDB($db, $dbPath);
+            $labels = [];
+            $whereClause = ($id > 0) ? sprintf(' WHERE media_id = %d', $id) : '';
+            $result = $conn->query('SELECT media_id AS id, labels FROM media_labels' . $whereClause);
+            while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+                $row['labels'] = json_decode($row['labels'], true) ?: [];
+                $labels[] = $row;
+            }
+            $conn->close();
+            echo json_encode(['ok' => true, 'labels' => $labels]);
+            exit;
+        }
+
+        if ($action === 'setLabels') {
+            $labelsInput = isset($input['labels']) ? $input['labels'] : [];
+            if ($id < 1) {
+                echo json_encode(['ok' => false, 'error' => 'invalid id']);
+                exit;
+            }
+            if (!is_array($labelsInput)) {
+                echo json_encode(['ok' => false, 'error' => 'labels must be an array']);
+                exit;
+            }
+            $labelsJson = json_encode($labelsInput, JSON_UNESCAPED_UNICODE);
+            initDB($db, $dbPath);
+            $conn = getDB($db, $dbPath);
+            $stmt = $conn->prepare('INSERT INTO media_labels (media_id, labels) VALUES (:id, :labels)
+                ON CONFLICT(media_id) DO UPDATE SET labels = :labels2');
+            $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
+            $stmt->bindValue(':labels', $labelsJson, SQLITE3_TEXT);
+            $stmt->bindValue(':labels2', $labelsJson, SQLITE3_TEXT);
+            $stmt->execute();
+            $conn->close();
+            echo json_encode(['ok' => true, 'id' => $id, 'labels' => $labelsInput]);
+            exit;
+        }
 
         // getData: 通过POST获取数据（避免GET参数被浏览器捕获）
         if ($action === 'getData') {
@@ -157,6 +211,12 @@ try {
                         $stmt2->bindValue(':id', $i, SQLITE3_INTEGER);
                         $stmt2->execute();
                     }
+
+                    $stmt3 = $conn->prepare('INSERT OR IGNORE INTO media_labels (media_id, labels) VALUES (:id, \'[]\')');
+                    for ($i = $maxExisting + 1; $i <= $expandTo; $i++) {
+                        $stmt3->bindValue(':id', $i, SQLITE3_INTEGER);
+                        $stmt3->execute();
+                    }
                 }
             }
 
@@ -173,8 +233,15 @@ try {
                 $extra[] = $row;
             }
 
+            $labels = [];
+            $result = $conn->query('SELECT media_id AS id, labels FROM media_labels' . $whereClause);
+            while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+                $row['labels'] = json_decode($row['labels'], true) ?: [];
+                $labels[] = $row;
+            }
+
             $conn->close();
-            echo json_encode(['stats' => $stats, 'extra' => $extra]);
+            echo json_encode(['stats' => $stats, 'extra' => $extra, 'labels' => $labels]);
             exit;
         }
 

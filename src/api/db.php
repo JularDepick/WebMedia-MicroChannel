@@ -3,8 +3,9 @@
  * SQLite 数据库初始化与连接
  * 接受数据库名称参数，支持多配置切换
  *
- * 表1: media_stats  — 编号,{浏览量,点赞量,收藏量}
- * 表2: media_extra  — 编号,{下载量,分享量,屏蔽量}
+ * 表1: media_stats   — 编号,{浏览量,点赞量,收藏量}
+ * 表2: media_extra   — 编号,{下载量,分享量,屏蔽量}
+ * 表3: media_labels  — 编号,{标签JSON数组}
  */
 
 /**
@@ -30,8 +31,17 @@ function resolveDBPath($dbPath = '') {
         throw new Exception('dbPath must not contain ".." traversal');
     }
 
+    $targetDir = $baseDir . DIRECTORY_SEPARATOR . $dbPath;
+
+    // 目录不存在时自动创建
+    if (!is_dir($targetDir)) {
+        if (!mkdir($targetDir, 0755, true)) {
+            throw new Exception('Failed to create directory: ' . $dbPath);
+        }
+    }
+
     // 解析为绝对路径
-    $resolved = realpath($baseDir . DIRECTORY_SEPARATOR . $dbPath);
+    $resolved = realpath($targetDir);
     if ($resolved === false) {
         throw new Exception('dbPath does not exist: ' . $dbPath);
     }
@@ -78,6 +88,11 @@ function initDB($dbName = 'media-cls0.db', $dbPath = '') {
         downloads INTEGER NOT NULL DEFAULT 0,
         shares INTEGER NOT NULL DEFAULT 0,
         blocks INTEGER NOT NULL DEFAULT 0
+    )');
+
+    $db->exec('CREATE TABLE IF NOT EXISTS media_labels (
+        media_id INTEGER PRIMARY KEY,
+        labels TEXT NOT NULL DEFAULT \'[]\'
     )');
 
     $db->close();

@@ -816,8 +816,183 @@ img {
 }
 
 /* ==========================================================
+   标签筛选栏
+   ========================================================== */
+.label-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.label-filter-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.label-filter-clear {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+  height: 36px;
+}
+
+.label-filter-clear:hover {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+.label-filter-mode {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+  height: 36px;
+}
+
+.label-filter-mode:hover {
+  background: var(--accent-dim);
+}
+
+.label-filter-mode.partial {
+  background: var(--accent);
+  color: #fff;
+}
+
+.label-filter-input-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: text;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-height: 36px;
+}
+
+.label-filter-input-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
+.label-filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.label-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 3px;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.label-filter-tag .remove {
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.label-filter-tag .remove:hover {
+  opacity: 1;
+}
+
+.label-filter-input {
+  flex: 1;
+  min-width: 80px;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  padding: 2px 0;
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.label-filter-input::placeholder {
+  color: var(--text-muted);
+}
+
+.label-filter-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding-left: 2px;
+}
+
+/* ==========================================================
    Media Card（媒体卡片）
    ========================================================== */
+
+/* 标签横幅 - 悬浮于媒体区域上方 */
+.card-label-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--accent) 50%, transparent);
+  pointer-events: none;
+}
+
+body.hide-label-banner .card-label-banner {
+  display: none !important;
+}
+
+.card-label-banner:empty {
+  display: none;
+  padding: 0;
+}
+
+.card-label-tag {
+  display: inline-block;
+  margin: 2px;
+  padding: 2px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: calc(50% - 4px);
+  pointer-events: auto;
+}
+
 .media-card {
   position: relative;
   border-radius: var(--radius-md);
@@ -1403,6 +1578,7 @@ img {
   justify-content: center;
   overflow: hidden;
   position: relative;
+  background: rgba(0, 0, 0, 0.8);
 }
 
 .fullscreen-media {
@@ -1431,7 +1607,12 @@ img {
   cursor: pointer;
   border-radius: var(--radius-md);
   position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 1001;
+  object-fit: contain;
 }
 
 /* ==========================================================

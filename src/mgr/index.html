@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>频道管理端</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <!-- Toast 提示容器 -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <header class="admin-header" id="top">
+        <h1 class="admin-title">
+            频道管理 <span class="admin-subtitle">管理端</span>
+        </h1>
+        <div class="admin-user" id="adminUser" style="display: none;">
+            <span class="username" id="usernameDisplay"></span>
+            <button class="btn-logout" id="logoutBtn">退出</button>
+        </div>
+    </header>
+
+    <main class="admin-container">
+        <!-- 登录面板 -->
+        <section class="auth-panel" id="authPanel">
+            <h2 class="auth-title">管理员登录</h2>
+            <form class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" maxlength="32" autocomplete="username" required />
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" autocomplete="current-password" required />
+                </div>
+                <button type="submit" class="btn btn-primary">登录</button>
+            </form>
+        </section>
+
+        <!-- 频道列表面板 -->
+        <section id="channelPanel" style="display: none;">
+            <div class="panel-toolbar">
+                <h2>频道列表</h2>
+                <div class="toolbar-actions">
+                    <button class="btn btn-secondary" id="refreshChannelsBtn">刷新</button>
+                </div>
+            </div>
+
+            <!-- 来源切换 -->
+            <div class="source-bar">
+                <span class="source-label">数据来源:</span>
+                <div class="source-tabs">
+                    <button class="source-tab active" data-source="config">服务端指定</button>
+                    <button class="source-tab" data-source="local">同源数据库</button>
+                </div>
+                <span class="source-status" id="sourceStatus"></span>
+            </div>
+
+            <div class="channel-list" id="channelList">
+                <p class="connect-status">加载中...</p>
+            </div>
+        </section>
+
+        <!-- 频道详情面板 -->
+        <section id="channelDetailPanel" style="display: none;">
+            <div class="panel-toolbar">
+                <div class="toolbar-left">
+                    <button class="btn btn-cancel" id="backToChannelsBtn">返回</button>
+                    <h2 id="detailChannelName"></h2>
+                </div>
+                <div class="toolbar-right">
+                    <span style="font-size:0.85rem;color:var(--color-text-light);">ID范围:</span>
+                    <input type="number" id="rangeMin" min="1" value="1" class="range-input" />
+                    <span style="color:var(--color-text-light);">-</span>
+                    <input type="number" id="rangeMax" min="1" value="100" class="range-input" />
+                    <button class="btn btn-secondary" id="loadRangeBtn">加载</button>
+                </div>
+            </div>
+
+            <!-- Tab 切换 -->
+            <div class="detail-tabs">
+                <button class="detail-tab active" data-tab="stats">数据统计</button>
+                <button class="detail-tab" data-tab="labels">标签管理</button>
+            </div>
+
+            <!-- 数据统计 -->
+            <div id="statsContent" class="tab-content">
+                <div class="stats-table-container">
+                    <div class="stats-table-wrap">
+                        <table class="stats-table" id="statsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>浏览</th>
+                                    <th>点赞</th>
+                                    <th>收藏</th>
+                                    <th>下载</th>
+                                    <th>分享</th>
+                                    <th>屏蔽</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statsTableBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="empty-tip" id="statsEmptyTip" style="display: none;">暂无数据，请先调整ID范围加载</p>
+                </div>
+            </div>
+
+            <!-- 标签管理 -->
+            <div id="labelsContent" class="tab-content" style="display: none;">
+                <div class="label-table-container">
+                    <div class="label-table-wrap">
+                        <table class="label-table" id="labelTable">
+                            <thead>
+                                <tr>
+                                    <th class="col-id">ID</th>
+                                    <th class="col-labels">标签</th>
+                                    <th class="col-actions">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="labelTableBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="empty-tip" id="labelEmptyTip" style="display: none;">暂无数据</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 回到顶部按钮 -->
+    <button id="backToTop" class="back-to-top" title="回到顶部">&#9650;</button>
+
+    <!-- 浮动表头 -->
+    <div id="floatingHeader" class="floating-header">
+        <table class="floating-table" id="floatingTable">
+            <thead><tr id="floatingRow"></tr></thead>
+        </table>
+    </div>
+
+    <footer class="admin-footer">
+        <p>&copy; 2026 <a href="https://github.com/JularDepick" target="_blank" rel="noopener noreferrer">JularDepick</a>. <a href="https://github.com/JularDepick/WebMedia-MicroChannel" target="_blank" rel="noopener noreferrer">WebMedia-MicroChannel</a> v1.5</p>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>
