@@ -514,9 +514,16 @@
         console.log('[MGR-DEBUG] 打开频道: name=' + ch.name + ' dbName=' + ch.dbName + ' source=' + ch._source);
         dbg('频道', '打开频道', { name: ch.name, dbName: ch.dbName, source: ch._source });
         currentChannel = ch;
-        if (ch.mediaIdMax > 0) {
+        if (ch._source === 'config' && ch.mediaIdMax > 0) {
+            /* 服务端指定模式：使用 main.js 指定的范围 */
             currentRangeMin = ch.mediaIdMin;
             currentRangeMax = ch.mediaIdMax;
+            ch._fullQuery = false;
+        } else {
+            /* 同源数据库模式：使用全量查询获取完整范围 */
+            currentRangeMin = 1;
+            currentRangeMax = 100;
+            ch._fullQuery = true;
         }
         document.getElementById('rangeMin').value = currentRangeMin;
         document.getElementById('rangeMax').value = currentRangeMax;
@@ -538,18 +545,34 @@
         /* config 模式: dbPath=sqlitedb/cait/, dbName=cait20260609-0.db */
 
         var url = 'stats_view.php?dbPath=' + encodeURIComponent(dbPath) +
-            '&dbName=' + encodeURIComponent(dbName) +
-            '&min=' + currentRangeMin + '&max=' + currentRangeMax;
-        console.log('[MGR-DEBUG] 加载频道数据: dbPath=' + dbPath + ' dbName=' + dbName + ' range=' + currentRangeMin + '-' + currentRangeMax);
-        dbg('数据', '加载频道数据', { dbPath: dbPath, dbName: dbName });
+            '&dbName=' + encodeURIComponent(dbName);
+        if (ch._fullQuery) {
+            url += '&fullQuery=1';
+        } else {
+            url += '&min=' + currentRangeMin + '&max=' + currentRangeMax;
+        }
+        console.log('[MGR-DEBUG] 加载频道数据: dbPath=' + dbPath + ' dbName=' + dbName + ' fullQuery=' + (ch._fullQuery || false) + ' range=' + currentRangeMin + '-' + currentRangeMax);
+        dbg('数据', '加载频道数据', { dbPath: dbPath, dbName: dbName, fullQuery: ch._fullQuery });
         apiRequest(url).then(function (data) {
             statsCache = data.data.stats || [];
             extraCache = data.data.extra || [];
             labelsCache = data.data.labels || [];
             console.log('[MGR-DEBUG] 频道数据加载完成: stats=' + statsCache.length + ' extra=' + extraCache.length + ' labels=' + labelsCache.length);
             dbg('数据', '加载完成', { stats: statsCache.length, extra: extraCache.length, labels: labelsCache.length });
+            if (ch._fullQuery && statsCache.length > 0) {
+                var ids = statsCache.map(function (s) { return s.id; });
+                currentRangeMin = Math.min.apply(null, ids);
+                currentRangeMax = Math.max.apply(null, ids);
+                document.getElementById('rangeMin').value = currentRangeMin;
+                document.getElementById('rangeMax').value = currentRangeMax;
+                ch.mediaIdMin = currentRangeMin;
+                ch.mediaIdMax = currentRangeMax;
+                ch._fullQuery = false;
+                dbg('数据', '全量查询后更新ID范围', { min: currentRangeMin, max: currentRangeMax });
+            }
             renderStatsTable();
             renderLabelTable();
+            saveWorkspace();
             showToast('已加载 ' + statsCache.length + ' 条数据', 'success');
         }).catch(function (err) {
             console.error('[MGR-DEBUG] 频道数据加载失败: ' + err.message);
@@ -816,6 +839,57 @@
         });
     }
 
+    /* 修复数据库按钮二次确认 */
+    var resetFixDbBtn = function () {
+        var btn = document.getElementById('fixDbBtn');
+        clearTimeout(btn._confirmTimer);
+        btn._confirmTimer = null;
+        btn.classList.remove('confirm-state');
+        btn.textContent = '修复数据库';
+    };
+
+    function fixDatabase() {
+        var ch = currentChannel;
+        if (!ch) return;
+        var btn = document.getElementById('fixDbBtn');
+
+        /* 二次确认逻辑 */
+        if (btn.classList.contains('confirm-state')) {
+            resetFixDbBtn();
+            var relPath = ch.dbPath ? ch.dbPath.replace(/^sqlitedb\//, '') + ch.dbName : ch.dbName;
+            console.log('[MGR-DEBUG] 修复数据库: ' + relPath);
+            dbg('用户操作', '修复数据库', { relPath: relPath });
+            btn.disabled = true;
+            btn.textContent = '修复中...';
+            apiRequest('db_fix.php', {
+                method: 'POST',
+                body: JSON.stringify({ dbPath: relPath })
+            }).then(function (data) {
+                console.log('[MGR-DEBUG] 数据库修复完成', data.data);
+                dbg('用户操作', '修复完成', data.data);
+                var filled = data.data.filled;
+                var totalFilled = filled.stats + filled.extra + filled.labels;
+                if (totalFilled > 0) {
+                    showToast('修复完成：stats +' + filled.stats + '，extra +' + filled.extra + '，labels +' + filled.labels, 'success');
+                } else {
+                    showToast('数据库无需修复，三个表已对齐', 'info');
+                }
+                btn.disabled = false;
+                btn.textContent = '修复数据库';
+                loadChannelData();
+            }).catch(function (err) {
+                console.error('[MGR-DEBUG] 数据库修复失败: ' + err.message);
+                showToast(err.message || '修复失败', 'error');
+                btn.disabled = false;
+                btn.textContent = '修复数据库';
+            });
+        } else {
+            btn.classList.add('confirm-state');
+            btn.textContent = '确认修复';
+            btn._confirmTimer = setTimeout(resetFixDbBtn, 3000);
+        }
+    }
+
     /* ============================================================
        浮动表头
        ============================================================ */
@@ -941,6 +1015,11 @@
             });
         });
 
+        /* 修复数据库按钮 */
+        document.getElementById('fixDbBtn').addEventListener('click', function () {
+            fixDatabase();
+        });
+
         /* 来源切换 */
         document.querySelectorAll('.source-tab').forEach(function (el) {
             el.addEventListener('click', function () {
@@ -961,6 +1040,9 @@
                     el.classList.remove('confirm-state');
                     if (el.classList.contains('label-action-clear')) {
                         el.textContent = '清空';
+                    }
+                    if (el.id === 'fixDbBtn') {
+                        el.textContent = '修复数据库';
                     }
                 }
             });

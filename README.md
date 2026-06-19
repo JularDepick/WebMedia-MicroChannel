@@ -2,7 +2,7 @@
 
 # WebMedia-MicroChannel
 
-[![Version](https://img.shields.io/badge/Version-1.5-red)](https://github.com/JularDepick/WebMedia-MicroChannel/releases/tag/v1.5)
+[![Version](https://img.shields.io/badge/Version-1.5.1-red)](https://github.com/JularDepick/WebMedia-MicroChannel/releases/tag/v1.5.1)
 [![MIT](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE/MIT)
 [![Copyright](https://img.shields.io/badge/Copyright-JularDepick-0066AA)](./COPYRIGHT)
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * 查看频道统计数据（只读）
- * GET ?dbPath=xxx&dbName=xxx&min=1&max=100
+ * GET ?dbPath=xxx&dbName=xxx&min=1&max=100&fullQuery=1
  */
 
 require_once __DIR__ . '/auth_helper.php';
@@ -16,6 +16,7 @@ $dbPath = str_replace('\\', '/', trim($_GET['dbPath'] ?? ''));
 $dbName = trim($_GET['dbName'] ?? '');
 $min = isset($_GET['min']) ? intval($_GET['min']) : 0;
 $max = isset($_GET['max']) ? min(intval($_GET['max']), 10000) : 0;
+$fullQuery = isset($_GET['fullQuery']) && $_GET['fullQuery'] === '1';
 
 if (empty($dbName)) {
     jsonResponse(1005, '参数不完整');
@@ -48,9 +49,51 @@ if (!file_exists($dbFile)) {
     jsonResponse(4001, '数据库文件不存在');
 }
 
-$db = new SQLite3($dbFile, SQLITE3_OPEN_READONLY);
+$db = new SQLite3($dbFile, SQLITE3_OPEN_READWRITE);
 $db->busyTimeout(5000);
 
+/* 兼容v1.4数据库：确保media_labels表存在 */
+$db->exec('CREATE TABLE IF NOT EXISTS media_labels (
+    media_id INTEGER PRIMARY KEY,
+    labels TEXT NOT NULL DEFAULT \'[]\'
+)');
+
+/* 全量查询模式：返回数据库中所有数据 */
+if ($fullQuery) {
+    $stats = [];
+    $result = $db->query('SELECT media_id AS id, views, likes, favorites FROM media_stats');
+    if ($result) {
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            $stats[] = $row;
+        }
+    }
+
+    $extra = [];
+    $result = $db->query('SELECT media_id AS id, downloads, shares, blocks FROM media_extra');
+    if ($result) {
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            $extra[] = $row;
+        }
+    }
+
+    $labels = [];
+    $result = $db->query('SELECT media_id AS id, labels FROM media_labels');
+    if ($result) {
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            $row['labels'] = json_decode($row['labels'], true) ?: [];
+            $labels[] = $row;
+        }
+    }
+
+    $db->close();
+    jsonResponse(0, 'success', [
+        'stats' => $stats,
+        'extra' => $extra,
+        'labels' => $labels
+    ]);
+}
+
+/* 指定范围查询模式 */
 $whereClause = ($min > 0 && $max >= $min) ? sprintf(' WHERE media_id BETWEEN %d AND %d', $min, $max) : '';
 
 $stats = [];
