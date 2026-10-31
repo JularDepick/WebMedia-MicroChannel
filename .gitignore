@@ -1,11 +1,33 @@
+# 媒体资源(仅本地存放,不入库)
 images/
 videos/
 audios/
 sqlitedb/
 
+# 数据库文件
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Node 与 Nuxt 构建产物
+node_modules/
+.nuxt/
+.output/
+dist/
+.npm-cache/
+
+# 临时目录
+temp/
+tmp/
+.agent/
+.agents/
+
+# 编辑器
 .vscode/
 .idea/
 
+# 脚本
 .startClaude.bat
 .startMiMo.bat
 

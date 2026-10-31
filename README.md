@@ -2,8 +2,8 @@
 
 # WebMedia-MicroChannel
 
-[![Version](https://img.shields.io/badge/Version-1.5.1-red)](https://github.com/JularDepick/WebMedia-MicroChannel/releases/tag/v1.5.1)
-[![MIT](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE/MIT)
+[![Version](https://img.shields.io/badge/Version-2.0.0-red)](https://github.com/JularDepick/WebMedia-MicroChannel/releases/tag/v2.0.0)
+[![MIT](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
 [![Copyright](https://img.shields.io/badge/Copyright-JularDepick-0066AA)](./COPYRIGHT)
 
 [[English]](./README.md)
@@ -11,163 +11,132 @@
 
 </div>
 
-A minimalist, lightweight online media browsing platform that anonymously helps popularize your favorite content. Uses a lightweight PHP backend to store interaction data.
+A minimal, lightweight online media browsing platform that promotes the content you love anonymously. The frontend and backend are both implemented with Nuxt.
 
 ## Features
 
-- **Multi-channel support**: Switch between channels via the top-left button, each with independent resource URL, database, announcement, etc. Switching channels automatically interrupts in-flight media loads (images/videos/audios), immediately aborting network requests from the previous channel
-- **Tag system**: Resource cards display floating tag banners at the top (toggleable), tag data stored in channel database, managed via the admin panel
-- **Tag filtering**: "Tags" tab in the navigation bar allows filtering media by tags, supports exact match and partial match modes, multiple tags use intersection, sorted by recommendation formula
-- **Category browsing**: Favorites, Explore, Home, Recommend, Hot, Top Liked, Featured, Best, Shared, Sensitive tabs
-- **Adaptive grid layout**: 1-5 columns freely switchable, 12 card viewport ratio options (original, 16:9, 4:3, 1:1, etc.)
-- **Bookmark system**: Sidebar for adding/jumping/clearing bookmarks to quickly locate content
-- **Interaction stats**: Views, likes, favorites, downloads, shares, blocks — persisted to SQLite
-- **Lazy loading**: On-demand image, video, and audio loading with infinite scroll
-- **Fullscreen view**: Click media to enter fullscreen with zoom and 1:1 original size support
-- **Audio player**: Custom audio player with play/pause, progress bar, volume control, speed adjustment
-- **Video player**: Custom video player with playback controls, progress bar, volume, speed settings
-- **In-card playback controls**: Video/audio cards embed play button, progress bar, and mute button for inline playback without fullscreen
-- **Theme switching**: Multiple built-in themes (Light/Dark, Rose Red, Pink, Summer Orange, Vintage Yellow, Spring Green, Plateau Cyan, Sky Blue, Space Purple), one-click switch in settings panel
-- **Auto data refresh**: Configurable refresh interval (10/30/60 minutes), with manual immediate update
-- **Long-press dropdown menu**: Overflow navigation buttons auto-collapsed into a "More" dropdown control, long-press to expand
-- **Mobile-friendly**: Touch event compatible, responsive layout
-- **First-visit guide**: Auto-shows operation tips for new visitors
-
-## Project Structure
-
-```
-WebMedia-MicroChannel/
-├── src/
-│   ├── index.html          # Main page
-│   ├── main.js             # Core logic (UI, interactions, data management)
-│   ├── main.css            # Stylesheet
-│   ├── favicon.ico         # Site icon
-│   ├── api/
-│   │   ├── data.php        # Unified data API (GET/POST)
-│   │   ├── db.php          # SQLite database initialization
-│   │   └── sqlitedb/       # SQLite database files
-│   ├── images/             # Image resources (gitignored)
-│   ├── videos/             # Video resources (gitignored)
-│   ├── audios/             # Audio resources (gitignored)
-│   └── mgr/                # Admin panel (accessible via /mgr/ path)
-│       ├── index.html      # Admin entry
-│       ├── main.js         # Admin logic
-│       ├── style.css       # Admin styles
-│       ├── pwd.html        # Password hash generator
-│       └── api/            # Admin PHP API
-├── scripts/
-│   ├── 图片人工审核.py       # Manual review tool
-│   ├── 批量自定义重命名.py   # Batch rename tool
-│   ├── 文件列表生成.py       # File list generator
-│   ├── 文件列表同步.py       # File list sync
-│   └── image-judge-config.ini # Image review config
-└── dist/                   # Build output
-```
+- **Multi-channel support**: switch channels from the top-left button; each channel owns its resource address, database and announcement. Switching aborts the pending media requests of the previous channel immediately
+- **Label system**: labels float above each card as a banner (can be disabled); label data lives in the channel database and is maintained from the admin panel
+- **Label filtering**: the "标签" tab filters media by labels with exact or partial matching, multiple labels intersect, results follow the recommendation formula
+- **Category browsing**: favorites, explore, home, recommend, hot, top-liked, featured, best, shared, sensitive
+- **Adaptive grid**: 1 to 5 columns, twelve card aspect ratios including original size
+- **Bookmarks**: add, jump and clear bookmarks from the left sidebar
+- **Interaction stats**: views, likes, favorites, downloads, shares and blocks, persisted in SQLite
+- **Lazy loading**: images, videos and audios load on demand with infinite scrolling
+- **Fullscreen viewer**: fullscreen media viewing with zoom and 1:1 original size
+- **Audio player**: play and pause, progress bar, volume control and playback speed
+- **Video player**: playback control, progress bar, volume and speed settings
+- **In-card playback controls**: play button, progress bar and mute button without entering fullscreen
+- **Theme switching**: multiple built-in themes selectable from the settings panel
+- **Automatic data refresh**: configurable refresh cycle of 10, 30 or 60 minutes plus a manual refresh
+- **Overflow dropdown**: overflowing navigation buttons collapse into a "more" dropdown with long-press support
+- **Mobile support**: touch event compatibility and responsive layout
+- **First visit guide**: operation hints shown on the first visit
 
 ## Tech Stack
 
-- **Frontend**: Vanilla HTML / CSS / JavaScript (no framework dependencies)
-- **Backend**: PHP + SQLite3
-- **Utility scripts**: Python
+- **Framework**: Nuxt 4, frontend and backend unified
+- **Frontend**: Vue 3 with TypeScript and the Composition API
+- **Server**: Nitro file-based routes
+- **Database**: SQLite through the built-in `node:sqlite` module
+- **Tooling scripts**: Python 3
 
-## Quick Start
+## Getting Started
 
 ### Requirements
 
-- PHP 7.4+ (with SQLite3 extension enabled)
-- Web server (Apache / Nginx / PHP built-in server)
+- Node.js 22.5 or later with built-in `node:sqlite`
 
-### Local Development
+### Development
 
 ```bash
-# Clone the repository
 git clone https://github.com/JularDepick/WebMedia-MicroChannel.git
-cd WebMedia-MicroChannel
-
-# Use PHP built-in server
-php -S localhost:17891 -t src
+cd WebMedia-MicroChannel/src
+npm install
+npm run dev
 ```
 
-Open `http://localhost:17891` in your browser.
+Open `http://localhost:3000` in the browser.
 
-### Channel Configuration
+### Build and deploy
 
-Edit the `CHANNEL_CONFIGS` array in `src/main.js`:
+```bash
+cd src
+npm run build
+node ../dist/server/index.mjs
+```
 
-```js
+Build output goes to `dist/` at the project root and contains both the Node server and static assets.
+
+### Channel configuration
+
+Edit the `CHANNEL_CONFIGS` array in `src/shared/constants/channels.ts`:
+
+```ts
 {
   id: 'channel-id',
-  name: 'Channel Name',
-  nickname: 'Page Title',
-  announcement: 'Channel announcement (HTML supported)',
-  backend: 'api/',              // API path
-  dbPath: 'sqlitedb/path/',     // Database directory
-  dbName: 'database.db',       // Database filename
-  tableName: 'media_data',     // Table name
-  resourceUrl: 'images/',      // Resource URL
-  mediaPrefix: 'img-',         // Filename prefix
-  mediaIdLength: 4,            // Zero-padded ID length
-  mediaIdMin: 1,               // Minimum ID
-  mediaIdMax: 100,             // Maximum ID
-  mediaExt: '.jpg',            // File extension
-  mediaType: 'img'             // Media type: img / video / audio
+  name: 'Channel name',
+  nickname: 'Page title',
+  announcement: 'Channel announcement (HTML allowed)',
+  backend: '/api/',            // API prefix, may point to a remote Nuxt backend
+  dbPath: 'cait/',             // database directory relative to src/data/sqlitedb
+  dbName: 'channel.db',        // database file name
+  tableName: 'media_data',     // table name
+  resourceUrl: 'images/',      // resource URL
+  mediaPrefix: 'img-',         // file name prefix
+  mediaIdLength: 4,            // zero padding length
+  mediaIdMin: 1,               // minimum id
+  mediaIdMax: 100,             // maximum id
+  mediaExt: '.jpg',            // file extension
+  mediaType: 'img'             // media type: img / video / audio
 }
 ```
 
-## API
+`backend` accepts either a same-origin relative path or the absolute address of a remote Nuxt backend. Cross-origin access requires the origin to be listed in the runtime option `corsOrigins`.
 
-### GET Request
+## Data API
 
-```
-GET /api/data.php?db=xxx&min=1&max=100
-```
-
-Returns `{ stats: [{id, views, likes, favorites},...], extra: [{id, downloads, shares, blocks},...], labels: [{id, labels: [...]},...] }`
-
-### POST Request
+### Read
 
 ```
-POST /api/data.php
+GET /api/data?db=cait20260609-0.db&dbPath=cait/&min=1&max=100
+```
+
+Returns `{ stats: [{id, views, likes, favorites},...], extra: [{id, downloads, shares, blocks},...], labels: [{id, labels: [...]},...] }`.
+
+### Write interactions
+
+```
+POST /api/data
 Content-Type: application/json
 
-{ "db": "xxx", "table": "stats", "action": "like", "id": 1 }
+{ "db": "cait20260609-0.db", "dbPath": "cait/", "table": "stats", "action": "like", "id": 1 }
 ```
 
-- `table`: `stats` (views/likes/favorites) / `extra` (downloads/shares/blocks)
-- `action`: `view` / `like` / `favorite` / `download` / `share` / `block` / `getLabels` / `setLabels`
+- `table`: `stats` for views, likes and favorites, `extra` for downloads, shares and blocks
+- `action`: `view` / `like` / `favorite` / `download` / `share` / `block` / `getData` / `getLabels` / `setLabels`
 
 ## Admin Panel
 
-The admin panel (`src/mgr/`) is a backend for viewing channel data statistics and managing tags.
+The admin panel is served from the same origin at `/mgr`.
 
-### Generate Password
+### Generate a password
 
-1. Open `src/mgr/pwd.html` in a browser
-2. Enter the salt, username, and password, then click "Generate"
-3. Paste the hash into the corresponding account in `src/mgr/api/account.php`
+1. Open `/mgr/pwd` in the browser
+2. Enter the salt, user name and password, then click generate
+3. Put the resulting hash into `ADMIN_ACCOUNTS` in `src/server/config/site.ts`
 
-### Access the Admin Panel
+### Workflow
 
-The admin panel starts with the main server, accessible via the `/mgr/` path:
-
-```
-http://localhost:17891/mgr/
-```
-
-### Usage
-
-1. **Login**: Enter credentials configured in `account.php`
-2. **Select Data Source**: Choose between "Server Config" (read channel config from main.js) and "Local Database" (scan database directory)
-3. **Select Channel**: Click a channel card to enter the detail page
-4. **Data Statistics**: View views, likes, favorites, downloads, shares, blocks
-5. **Label Management**:
-   - Press Enter or comma to add a tag, Backspace to delete the last tag, click x to remove
-   - Supports "Clear" (with confirmation) and "Save" operations
-   - Max 10 labels per media, max 20 characters per label
-6. The frontend automatically fetches and displays tags on card tops on the next data refresh
+1. **Sign in** with an account configured in `ADMIN_ACCOUNTS`
+2. **Choose the data source**: either from the channel configuration or by scanning the same-origin database directory
+3. **Pick a channel** from the channel cards
+4. **Statistics**: inspect views, likes, favorites, downloads, shares and blocks
+5. **Label management**: press Enter or comma to add a label, Backspace to remove the last one, click the cross to remove a specific label; up to 10 labels with at most 20 characters each
+6. The main site picks the labels up on its next data refresh
 
 ## License
 
-This project is licensed under the [MIT License](./LICENSE/MIT).
+Released under the [MIT License](./LICENSE).
 
-Copyright &copy; 2026 [JularDepick](https://github.com/JularDepick/). See [COPYRIGHT](./COPYRIGHT) for details.
+Copyright &copy; 2026 [JularDepick](https://github.com/JularDepick). See [COPYRIGHT](./COPYRIGHT) for details.
