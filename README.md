@@ -79,7 +79,7 @@ Edit the `CHANNEL_CONFIGS` array in `src/shared/constants/channels.ts`:
   nickname: 'Page title',
   announcement: 'Channel announcement (HTML allowed)',
   backend: '/api/',            // API prefix, may point to a remote Nuxt backend
-  dbPath: 'cait/',             // database directory relative to src/data/sqlitedb
+  dbPath: 'cait/',             // database directory relative to data/sqlitedb at project root
   dbName: 'channel.db',        // database file name
   tableName: 'media_data',     // table name
   resourceUrl: 'images/',      // resource URL

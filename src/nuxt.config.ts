@@ -35,9 +35,8 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    /* 服务端:频道数据库根目录与认证库路径,可由环境变量覆盖 */
-    dbBaseDir: 'data/sqlitedb',
-    authDbPath: 'data/auth.db',
+    /* 运行时数据根目录,固定在项目根下的 data/,可用 WMMC_DATA_DIR 覆盖 */
+    dataDir: 'data',
     /* 跨域白名单,逗号分隔;留空表示仅允许同源 */
     corsOrigins: '',
     public: {

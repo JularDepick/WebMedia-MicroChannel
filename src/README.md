@@ -55,12 +55,14 @@ src/
 
 ## 数据存放
 
-频道数据库与认证库位于 `src/data/`,该目录不入库。
+运行时数据固定在项目根目录的 `data/`,该目录不入库,也不会被构建清理。
 
-- 频道数据库根目录: `src/data/sqlitedb/`,由 `runtimeConfig.dbBaseDir` 指定,可用环境变量 `WMMC_DB_DIR` 覆盖
-- 认证库: `src/data/auth.db`,由 `runtimeConfig.authDbPath` 指定,可用环境变量 `WMMC_AUTH_DB` 覆盖
+- 频道数据库根目录: `data/sqlitedb/`
+- 认证库: `data/auth.db`
 
-启动时按启动目录解析相对路径,依次尝试当前目录与当前目录下的 `src/`,因此从 `src/` 或项目根启动都能定位到同一份数据。
+数据根目录由 `runtimeConfig.dataDir` 指定(默认 `data`),可用环境变量 `WMMC_DATA_DIR` 覆盖;`WMMC_DB_DIR` 与 `WMMC_AUTH_DB` 可分别覆盖两个库的位置。
+
+服务端从启动目录向上识别项目根,以 `src/package.json` 或 `dist/server/index.mjs` 为标记,因此从项目根、`src/` 或 `dist/` 启动都指向同一个 `data/`。
 
 ## 运行
 

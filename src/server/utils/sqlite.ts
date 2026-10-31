@@ -50,23 +50,51 @@ export interface LabelRow {
  * 绝对路径直接使用, 相对路径依次尝试启动目录与启动目录下的 src/
  * 便于开发时在 src/ 启动、部署时在项目根启动, 均能定位到同一份数据
  */
-export function resolveDataPath(raw: string): string {
-  if (isAbsolute(raw)) return raw
-  const candidates = [
-    resolve(process.cwd(), raw),
-    resolve(process.cwd(), 'src', raw)
-  ]
-  for (const candidate of candidates) {
-    if (existsSync(candidate)) return candidate
+/*
+ * 识别项目根目录
+ * 以依赖声明或构建产物为标记, 兼容从项目根、src 或 dist 启动
+ */
+export function detectProjectRoot(start = process.cwd()): string {
+  let dir = resolve(start)
+  for (let depth = 0; depth < 4; depth++) {
+    if (existsSync(resolve(dir, 'src', 'package.json')) || existsSync(resolve(dir, 'dist', 'server', 'index.mjs'))) {
+      return dir
+    }
+    const parent = resolve(dir, '..')
+    if (parent === dir) break
+    dir = parent
   }
-  return candidates[0]
+  return resolve(start)
 }
 
-/* 数据库根目录: 环境变量优先,其次取运行时配置 */
+/* 判断路径是否落在构建产物目录内, 以 nitro.json 或 server 子目录为标记 */
+function insideBuildOutput(target: string): boolean {
+  const parts = resolve(target).split(/[\\/]+/)
+  for (let index = 0; index < parts.length; index++) {
+    if (parts[index] !== 'dist') continue
+    const distDir = parts.slice(0, index + 1).join(sep)
+    if (existsSync(resolve(distDir, 'nitro.json')) || existsSync(resolve(distDir, 'server'))) {
+      return true
+    }
+  }
+  return false
+}
+
+/* 运行时数据根目录: 固定在项目根下的 data/, 不随构建产物清理 */
+export function dataRoot(): string {
+  const raw = String(process.env.WMMC_DATA_DIR || useRuntimeConfig().dataDir || 'data')
+  const root = isAbsolute(raw) ? raw : resolve(detectProjectRoot(), raw)
+  if (insideBuildOutput(root)) {
+    throw new Error('数据目录不能位于构建产物目录内: ' + root + ', 请用环境变量 WMMC_DATA_DIR 指定数据目录')
+  }
+  return root
+}
+
+/* 频道数据库根目录, 可由 WMMC_DB_DIR 覆盖 */
 export function dbRoot(): string {
-  const config = useRuntimeConfig()
-  const raw = process.env.WMMC_DB_DIR || config.dbBaseDir || 'data/sqlitedb'
-  return resolveDataPath(raw)
+  const override = String(process.env.WMMC_DB_DIR || '').trim()
+  if (override !== '') return isAbsolute(override) ? override : resolve(dataRoot(), override)
+  return resolve(dataRoot(), 'sqlitedb')
 }
 
 function ensureDir(dir: string): string {

@@ -6,19 +6,19 @@
 import { DatabaseSync } from 'node:sqlite'
 import { mkdirSync, existsSync } from 'node:fs'
 import { createHash, randomBytes } from 'node:crypto'
-import { dirname } from 'node:path'
+import { dirname, isAbsolute, resolve } from 'node:path'
 import type { H3Event } from 'h3'
 import { ADMIN_ACCOUNTS, PASSWORD_SALT, TOKEN_TTL, USER_PERMISSIONS } from '../config/site'
 import { fail, ERR, type ApiResult } from './response'
-import { resolveDataPath } from './sqlite'
+import { dataRoot } from './sqlite'
 
 export type PermFlag = 'C' | 'D' | 'R' | 'U'
 
-/* 认证库路径: 环境变量优先,其次取运行时配置 */
+/* 认证库路径: 默认落在数据根目录, 可由 WMMC_AUTH_DB 覆盖 */
 export function authDbPath(): string {
-  const config = useRuntimeConfig()
-  const raw = process.env.WMMC_AUTH_DB || config.authDbPath || 'data/auth.db'
-  return resolveDataPath(raw)
+  const override = String(process.env.WMMC_AUTH_DB || '').trim()
+  if (override !== '') return isAbsolute(override) ? override : resolve(dataRoot(), override)
+  return resolve(dataRoot(), 'auth.db')
 }
 
 export function openAuthDb(): DatabaseSync {

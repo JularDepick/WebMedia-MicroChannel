@@ -79,7 +79,7 @@ node ../dist/server/index.mjs
   nickname: '页面标题',
   announcement: '频道公告（支持 HTML）',
   backend: '/api/',            // 接口前缀，可填远程 Nuxt 后端绝对地址
-  dbPath: 'cait/',             // 数据库目录，相对 src/data/sqlitedb
+  dbPath: 'cait/',             // 数据库目录，相对项目根 data/sqlitedb
   dbName: 'channel.db',        // 数据库文件名
   tableName: 'media_data',     // 数据表名
   resourceUrl: 'images/',      // 资源 URL
