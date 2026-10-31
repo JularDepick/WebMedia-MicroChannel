@@ -3,7 +3,7 @@
 # WebMedia-MicroChannel
 
 [![Version](https://img.shields.io/badge/Version-2.0.0-red)](https://github.com/JularDepick/WebMedia-MicroChannel/releases/tag/v2.0.0)
-[![MIT](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue)](./LICENSE)
 [![Copyright](https://img.shields.io/badge/Copyright-JularDepick-0066AA)](./COPYRIGHT)
 
 [[English]](./README.md)
@@ -137,6 +137,6 @@ Content-Type: application/json
 
 ## 许可证
 
-本项目采用 [MIT 许可证](./LICENSE)。
+本项目采用 [Apache License 2.0](./LICENSE)。
 
 版权所有 &copy; 2026 [JularDepick](https://github.com/JularDepick/)，详见 [COPYRIGHT](./COPYRIGHT)。

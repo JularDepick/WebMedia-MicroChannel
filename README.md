@@ -3,7 +3,7 @@
 # WebMedia-MicroChannel
 
 [![Version](https://img.shields.io/badge/Version-2.0.0-red)](https://github.com/JularDepick/WebMedia-MicroChannel/releases/tag/v2.0.0)
-[![MIT](https://img.shields.io/badge/License-MIT-yellow)](./LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue)](./LICENSE)
 [![Copyright](https://img.shields.io/badge/Copyright-JularDepick-0066AA)](./COPYRIGHT)
 
 [[English]](./README.md)
@@ -137,6 +137,6 @@ The admin panel is served from the same origin at `/mgr`.
 
 ## License
 
-Released under the [MIT License](./LICENSE).
+Released under the [Apache License 2.0](./LICENSE).
 
 Copyright &copy; 2026 [JularDepick](https://github.com/JularDepick). See [COPYRIGHT](./COPYRIGHT) for details.

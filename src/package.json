@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "极简在线媒体微频道",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
